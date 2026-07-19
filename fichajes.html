@@ -91,7 +91,12 @@
 <div id="vista-app" style="display:none">
   <header>
     <div class="brand">Fichajes <span style="color:var(--mar)">Bonita</span></div>
-    <nav><a href="index.html">← Cuadrante</a></nav>
+    <nav class="tabs" style="display:flex;gap:16px">
+      <a href="index.html" style="color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'">Planificación</a>
+      <a href="fichajes.html" style="color:var(--mar);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo';border-bottom:2px solid var(--mar);padding-bottom:2px">Fichajes</a>
+      <a href="informes.html" style="color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'">Informes</a>
+      <a href="empleados.html" style="color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'">Empleados</a>
+    </nav>
     <select id="sel-local" aria-label="Local"></select>
     <div class="dia-nav">
       <button id="dia-prev" aria-label="Día anterior">‹</button>

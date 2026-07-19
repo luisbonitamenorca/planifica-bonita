@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informes · Bonita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
+    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
+    --mas:#B03A2E; --menos:#2F855A;
+    --aviso:#B7791F; --aviso-fondo:#FBF3E0; --error:#B03A2E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
+  .brand{font-size:22px;font-weight:700}.brand span{color:var(--mar)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:12px;margin:12px 0 5px}
+  input,select{padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
+  .login-card input{width:100%}
+  input:focus,select:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
+  .btn-primario{background:var(--mar);color:#fff}
+  .btn-primario:hover{background:var(--mar-oscuro)}
+  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
+  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+
+  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
+  header .brand{font-size:17px}
+  .tabs{display:flex;gap:16px}
+  .tabs a{color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'}
+  .tabs a.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
+  .spacer{flex:1}
+
+  main{max-width:940px;margin:0 auto;padding:20px}
+  .filtros{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+  .filtros label{margin:0 0 5px}
+  .exportes{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 20px}
+  table{border-collapse:collapse;width:100%;background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden}
+  th,td{border-bottom:1px solid var(--fondo);padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--arena);font-family:'Archivo';font-size:12px;text-align:right}
+  thead th:first-child{text-align:left}
+  td.np{font-weight:600}
+  .desv-mas{color:var(--mas);font-weight:600}
+  .desv-menos{color:var(--menos);font-weight:600}
+  tfoot td{font-weight:700;background:var(--fondo)}
+  .nota{color:var(--tinta-suave);font-size:12px;margin-top:10px}
+  .vacio{text-align:center;padding:40px;color:var(--tinta-suave)}
+  .aviso-inc{background:var(--aviso-fondo);color:var(--aviso);border-radius:20px;font-size:11px;font-weight:600;padding:2px 8px;margin-left:6px}
+</style>
+</head>
+<body>
+
+<div id="vista-login" class="login-wrap">
+  <form class="login-card" id="form-login">
+    <div class="brand">Informes <span>Bonita</span></div>
+    <p>Planificado vs fichado, y exportaciones</p>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" required>
+    <button class="btn btn-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+  </form>
+</div>
+
+<div id="vista-app" style="display:none">
+  <header>
+    <div class="brand">Informes <span style="color:var(--mar)">Bonita</span></div>
+    <nav class="tabs">
+      <a href="index.html">Planificación</a>
+      <a href="fichajes.html">Fichajes</a>
+      <a class="activa" href="informes.html">Informes</a>
+      <a href="empleados.html">Empleados</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
+  </header>
+
+  <main>
+    <div class="filtros">
+      <div><label>Local</label><select id="sel-local"></select></div>
+      <div><label>Desde</label><input type="date" id="f-desde"></div>
+      <div><label>Hasta</label><input type="date" id="f-hasta"></div>
+      <button class="btn btn-primario" id="btn-calcular">Calcular</button>
+    </div>
+
+    <div class="exportes">
+      <button class="btn btn-fantasma" id="exp-resumen">⬇ CSV resumen (gestoría)</button>
+      <button class="btn btn-fantasma" id="exp-diario">⬇ CSV detalle diario</button>
+      <button class="btn btn-fantasma" id="exp-inspeccion">⬇ CSV registro completo (Inspección)</button>
+    </div>
+
+    <div id="resultado"><div class="vacio">Elige local y periodo, y pulsa Calcular.</div></div>
+    <div class="nota">Horas fichadas = entradas↔salidas menos pausas, con las correcciones ya aplicadas.
+    Planificado = solo turnos publicados. El registro completo para Inspección incluye método, correcciones y motivos, tal como exige la normativa.</div>
+  </main>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://cwhmyarbjyvkfskxreeo.supabase.co',
+  'sb_publishable_M-wEN03Ty8Gf1tSgni8PaA_V_F2-4vN'
+);
+
+const S = { user:null, rol:null, locales:[], datos:null };
+const $ = id => document.getElementById(id);
+const NOMBRE_TIPO = { entrada:'entrada', salida:'salida', pausa_inicio:'pausa_inicio', pausa_fin:'pausa_fin' };
+
+sb.auth.onAuthStateChange(async (_e, ses) => {
+  if (ses?.user && !S.user){ S.user = ses.user; await iniciar(); }
+  if (!ses?.user){ S.user=null; $('vista-app').style.display='none'; $('vista-login').style.display='flex'; }
+});
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email:$('email').value.trim(), password:$('pass').value });
+  if (error) $('login-error').textContent = 'No se pudo entrar: revisa el email y la contraseña.';
+});
+$('btn-salir').addEventListener('click', ()=>sb.auth.signOut());
+
+async function iniciar(){
+  const { data: perfil } = await sb.from('perfiles').select('rol').eq('user_id', S.user.id).single();
+  if (!perfil || perfil.rol === 'empleado'){
+    $('login-error').textContent='Esta pantalla es para encargados y administración.';
+    await sb.auth.signOut(); return;
+  }
+  S.rol = perfil.rol;
+  if (S.rol==='admin'){
+    const { data } = await sb.from('locales').select('id,nombre').eq('activo',true).order('nombre');
+    S.locales = data||[];
+  } else {
+    const { data } = await sb.from('encargado_locales').select('locales(id,nombre)').eq('user_id', S.user.id);
+    S.locales = (data||[]).map(r=>r.locales).filter(Boolean).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  }
+  $('sel-local').innerHTML = S.locales.map(l=>`<option value="${l.id}">${l.nombre}</option>`).join('');
+  // Mes en curso por defecto
+  const hoy = new Date();
+  $('f-desde').value = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toLocaleDateString('sv-SE');
+  $('f-hasta').value = hoy.toLocaleDateString('sv-SE');
+  $('vista-login').style.display='none'; $('vista-app').style.display='block';
+}
+
+$('btn-calcular').addEventListener('click', calcular);
+
+function efectivos(fichs){
+  const anulados = new Set(fichs.map(f=>f.corrige_a).filter(Boolean));
+  return fichs.filter(f=>!anulados.has(f.id));
+}
+function horasDePares(efs){ // efs de UN día ordenados
+  let neto=0, abierto=null, pausa=null, inc=0;
+  for (const f of efs){
+    const t = new Date(f.ts).getTime();
+    if (f.tipo==='entrada'){ if(abierto!==null) inc++; abierto=t; pausa=null; }
+    else if (f.tipo==='salida'){ if(abierto===null){inc++;continue;} if(pausa!==null){inc++;pausa=null;} neto+=t-abierto; abierto=null; }
+    else if (f.tipo==='pausa_inicio'){ if(abierto===null||pausa!==null) inc++; else pausa=t; }
+    else if (f.tipo==='pausa_fin'){ if(pausa===null) inc++; else { neto-=(t-pausa); pausa=null; } }
+  }
+  if (abierto!==null) inc++;
+  return { horas: neto/3600000, inc };
+}
+function horasTurno(t){
+  const [h1,m1]=t.hora_inicio.split(':').map(Number), [h2,m2]=t.hora_fin.split(':').map(Number);
+  let dur=(h2*60+m2)-(h1*60+m1); if(dur<=0) dur+=1440;
+  return Math.max(0,dur-(t.pausa_min||0))/60;
+}
+
+async function calcular(){
+  const localId = $('sel-local').value, desde = $('f-desde').value, hasta = $('f-hasta').value;
+  if (!desde || !hasta || desde>hasta){ alert('Revisa el rango de fechas.'); return; }
+  $('resultado').innerHTML = '<div class="vacio">Calculando…</div>';
+  const finTs = new Date(hasta+'T00:00'); finTs.setDate(finTs.getDate()+1);
+
+  const [emps, turnos, fichs] = await Promise.all([
+    sb.from('empleados').select('id,nombre,apellidos,horas_semana'),
+    sb.from('turnos').select('*').eq('local_id',localId).eq('estado','publicado').gte('fecha',desde).lte('fecha',hasta),
+    sb.from('fichajes').select('*').eq('local_id',localId)
+      .gte('ts', new Date(desde+'T00:00').toISOString()).lt('ts', finTs.toISOString()).order('ts')
+  ]);
+
+  const nombres = {}; for (const e of (emps.data||[])) nombres[e.id]=`${e.nombre} ${e.apellidos||''}`.trim();
+
+  // Fichajes efectivos agrupados por empleado y día
+  const porEmpDia = {};
+  for (const f of efectivos(fichs.data||[])){
+    const d = new Date(f.ts).toLocaleDateString('sv-SE');
+    const k = f.empleado_id;
+    ((porEmpDia[k] = porEmpDia[k]||{})[d] = porEmpDia[k][d]||[]).push(f);
+  }
+
+  const filas = {};
+  for (const t of (turnos.data||[])){
+    const r = filas[t.empleado_id] = filas[t.empleado_id]||{ plan:0, real:0, inc:0 };
+    r.plan += horasTurno(t);
+  }
+  for (const [empId, dias] of Object.entries(porEmpDia)){
+    const r = filas[empId] = filas[empId]||{ plan:0, real:0, inc:0 };
+    for (const efs of Object.values(dias)){
+      const { horas, inc } = horasDePares(efs);
+      r.real += horas; r.inc += inc;
+    }
+  }
+
+  S.datos = { localId, desde, hasta, filas, nombres,
+              fichajesTodos: fichs.data||[], porEmpDia,
+              localNombre: S.locales.find(l=>l.id===localId)?.nombre||'' };
+
+  const ids = Object.keys(filas).sort((a,b)=>(nombres[a]||'').localeCompare(nombres[b]||''));
+  if (!ids.length){ $('resultado').innerHTML='<div class="vacio">Sin turnos ni fichajes en este periodo.</div>'; return; }
+  let tp=0, tr=0;
+  let html = `<table><thead><tr><th>Empleado</th><th>Planificado</th><th>Fichado</th><th>Desviación</th></tr></thead><tbody>`;
+  for (const id of ids){
+    const r = filas[id], d = r.real - r.plan; tp+=r.plan; tr+=r.real;
+    const clase = Math.abs(d)<0.02 ? '' : (d>0?'desv-mas':'desv-menos');
+    html += `<tr><td class="np">${nombres[id]||'—'}${r.inc?`<span class="aviso-inc">⚠ ${r.inc}</span>`:''}</td>
+      <td>${r.plan.toFixed(2)} h</td><td>${r.real.toFixed(2)} h</td>
+      <td class="${clase}">${d>=0?'+':''}${d.toFixed(2)} h</td></tr>`;
+  }
+  const td = tr-tp;
+  html += `</tbody><tfoot><tr><td>Total ${S.datos.localNombre}</td><td>${tp.toFixed(2)} h</td><td>${tr.toFixed(2)} h</td>
+    <td class="${td>0?'desv-mas':td<0?'desv-menos':''}">${td>=0?'+':''}${td.toFixed(2)} h</td></tr></tfoot></table>`;
+  $('resultado').innerHTML = html;
+}
+
+// ---------- Exportaciones CSV ----------
+function descargar(nombre, filas){
+  const csv = filas.map(f => f.map(c => {
+    const s = String(c ?? '');
+    return /[";\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre; a.click();
+  URL.revokeObjectURL(a.href);
+}
+function necesitaDatos(){ if (!S.datos){ alert('Primero pulsa Calcular.'); return true; } return false; }
+
+$('exp-resumen').addEventListener('click', () => {
+  if (necesitaDatos()) return;
+  const { filas, nombres, desde, hasta, localNombre } = S.datos;
+  const out = [['Local','Periodo','Empleado','Horas planificadas','Horas fichadas','Desviacion','Incidencias']];
+  for (const [id,r] of Object.entries(filas))
+    out.push([localNombre, `${desde} a ${hasta}`, nombres[id]||'', r.plan.toFixed(2), r.real.toFixed(2), (r.real-r.plan).toFixed(2), r.inc]);
+  descargar(`resumen_${localNombre}_${desde}_${hasta}.csv`, out);
+});
+
+$('exp-diario').addEventListener('click', () => {
+  if (necesitaDatos()) return;
+  const { porEmpDia, nombres, desde, hasta, localNombre } = S.datos;
+  const out = [['Local','Empleado','Fecha','Fichajes del dia','Horas netas','Incidencias']];
+  for (const [empId, dias] of Object.entries(porEmpDia)){
+    for (const d of Object.keys(dias).sort()){
+      const efs = dias[d];
+      const { horas, inc } = horasDePares(efs);
+      const detalle = efs.map(f => `${NOMBRE_TIPO[f.tipo]} ${new Date(f.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`).join(' | ');
+      out.push([localNombre, nombres[empId]||'', d, detalle, horas.toFixed(2), inc]);
+    }
+  }
+  descargar(`detalle_diario_${localNombre}_${desde}_${hasta}.csv`, out);
+});
+
+$('exp-inspeccion').addEventListener('click', () => {
+  if (necesitaDatos()) return;
+  const { fichajesTodos, nombres, desde, hasta, localNombre } = S.datos;
+  const anulados = new Set(fichajesTodos.map(f=>f.corrige_a).filter(Boolean));
+  const out = [['Local','Empleado','Fecha y hora','Tipo','Metodo','Estado','Corrige a','Motivo correccion','Registrado el']];
+  for (const f of fichajesTodos){
+    out.push([localNombre, nombres[f.empleado_id]||'', new Date(f.ts).toLocaleString('es-ES'),
+      f.tipo, f.metodo, anulados.has(f.id)?'ANULADO por correccion':'vigente',
+      f.corrige_a||'', f.motivo_correccion||'', new Date(f.created_at).toLocaleString('es-ES')]);
+  }
+  descargar(`registro_horario_${localNombre}_${desde}_${hasta}.csv`, out);
+});
+</script>
+</body>
+</html>

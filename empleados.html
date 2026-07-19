@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empleados · Bonita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
+    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
+    --entrada:#2F855A; --entrada-f:#E8F3EC; --salida:#B03A2E; --salida-f:#F9ECEA;
+    --pausa:#5A6B73; --pausa-f:#EFF1F0; --correccion:#7A5CA8; --correccion-f:#F1EDF7;
+    --aviso:#B7791F; --aviso-fondo:#FBF3E0; --error:#B03A2E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
+  .brand{font-size:22px;font-weight:700}.brand span{color:var(--mar)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:12px;margin:12px 0 5px}
+  input,select{width:100%;padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
+  input:disabled,select:disabled{background:var(--fondo);color:var(--tinta-suave)}
+  input:focus,select:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
+  .btn-primario{background:var(--mar);color:#fff}
+  .btn-primario:hover{background:var(--mar-oscuro)}
+  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
+  .btn-peligro{background:transparent;border:1px solid var(--error);color:var(--error)}
+  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+
+  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
+  header .brand{font-size:17px}
+  .tabs{display:flex;gap:16px}
+  .tabs a{color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'}
+  .tabs a.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
+  .spacer{flex:1}
+
+  .layout{display:grid;grid-template-columns:290px 1fr;gap:0;min-height:calc(100vh - 63px)}
+  aside{background:#fff;border-right:1px solid var(--linea);padding:14px}
+  aside .buscador{margin-bottom:10px}
+  .lista-emp{overflow-y:auto;max-height:calc(100vh - 190px)}
+  .item-emp{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer}
+  .item-emp:hover{background:var(--fondo)}
+  .item-emp.activo{background:var(--mar);color:#fff}
+  .item-emp.activo .sub{color:#CFE8EA}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--arena);color:var(--tinta);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Archivo';font-size:13px;flex-shrink:0}
+  .item-emp .np{font-weight:600;font-size:13.5px}
+  .item-emp .sub{font-size:11.5px;color:var(--tinta-suave)}
+
+  section{padding:22px 26px;max-width:820px}
+  .cab-ficha{display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+  .avatar.grande{width:52px;height:52px;font-size:18px}
+  .cab-ficha h2{font-size:20px}
+  .badge{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px}
+  .badge.movil{background:var(--entrada-f);color:var(--entrada)}
+  .subcab{color:var(--tinta-suave);font-size:13px;margin-bottom:18px}
+  .panel{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:18px;margin-bottom:16px}
+  .panel h3{font-size:14px;margin-bottom:10px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 16px}
+  .fila-acciones{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .check{display:flex;align-items:center;gap:8px;margin-top:14px}
+  .check input{width:auto}
+  .pin-caja{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pin-valor{font-family:'Archivo';font-size:22px;font-weight:700;letter-spacing:4px;color:var(--mar)}
+  .nota{font-size:12px;color:var(--tinta-suave)}
+
+  .dia-hist{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-bottom:1px solid var(--fondo);flex-wrap:wrap}
+  .dia-hist .f{font-weight:600;font-family:'Archivo';font-size:13px;min-width:110px;text-transform:capitalize}
+  .dia-hist .h{color:var(--mar);font-weight:600;min-width:55px}
+  .chip{border-radius:6px;padding:2px 8px;font-size:11.5px;border:1.2px solid transparent}
+  .chip.entrada{background:var(--entrada-f);border-color:var(--entrada)}
+  .chip.salida{background:var(--salida-f);border-color:var(--salida)}
+  .chip.pausa_inicio,.chip.pausa_fin{background:var(--pausa-f);border-color:var(--pausa)}
+  .chip.correccion{background:var(--correccion-f);border-color:var(--correccion)}
+  .chip.anulado{opacity:.45;text-decoration:line-through}
+  .badge-inc{font-size:10.5px;font-weight:600;border-radius:12px;padding:2px 8px;background:var(--aviso-fondo);color:var(--aviso)}
+  .vacio{text-align:center;padding:40px;color:var(--tinta-suave)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none}
+  .toast.visible{opacity:1}
+  @media (max-width:760px){ .layout{grid-template-columns:1fr} aside{border-right:none;border-bottom:1px solid var(--linea)} .grid-2,.grid-3{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div id="vista-login" class="login-wrap">
+  <form class="login-card" id="form-login">
+    <div class="brand">Empleados <span>Bonita</span></div>
+    <p>Fichas de la plantilla</p>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" required>
+    <button class="btn btn-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+  </form>
+</div>
+
+<div id="vista-app" style="display:none">
+  <header>
+    <div class="brand">Empleados <span style="color:var(--mar)">Bonita</span></div>
+    <nav class="tabs">
+      <a href="index.html">Planificación</a>
+      <a href="fichajes.html">Fichajes</a>
+      <a href="informes.html">Informes</a>
+      <a class="activa" href="empleados.html">Empleados</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-primario" id="btn-alta" style="display:none">+ Añadir empleado</button>
+    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <input class="buscador" id="buscador" placeholder="Buscar por nombre…">
+      <div class="lista-emp" id="lista-emp"></div>
+    </aside>
+    <section id="ficha"><div class="vacio">Elige a alguien de la lista.</div></section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://cwhmyarbjyvkfskxreeo.supabase.co',
+  'sb_publishable_M-wEN03Ty8Gf1tSgni8PaA_V_F2-4vN'
+);
+const URL_FN = 'https://cwhmyarbjyvkfskxreeo.supabase.co/functions/v1/fichar';
+
+const S = { user:null, rol:null, empleados:[], locales:[], asigs:{}, sel:null, filtro:'' };
+const NOMBRE_TIPO = { entrada:'Entrada', salida:'Salida', pausa_inicio:'Pausa ▶', pausa_fin:'Pausa ■' };
+const $ = id => document.getElementById(id);
+const ini = n => n.split(/\s+/).map(p=>p[0]||'').join('').slice(0,2).toUpperCase();
+
+sb.auth.onAuthStateChange(async (_e, ses) => {
+  if (ses?.user && !S.user){ S.user = ses.user; await iniciar(); }
+  if (!ses?.user){ S.user=null; $('vista-app').style.display='none'; $('vista-login').style.display='flex'; }
+});
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email:$('email').value.trim(), password:$('pass').value });
+  if (error) $('login-error').textContent = 'No se pudo entrar: revisa el email y la contraseña.';
+});
+$('btn-salir').addEventListener('click', ()=>sb.auth.signOut());
+
+async function iniciar(){
+  const { data: perfil } = await sb.from('perfiles').select('rol').eq('user_id', S.user.id).single();
+  if (!perfil || perfil.rol === 'empleado'){
+    $('login-error').textContent='Esta pantalla es para encargados y administración.';
+    await sb.auth.signOut(); return;
+  }
+  S.rol = perfil.rol;
+  if (S.rol === 'admin') $('btn-alta').style.display='inline-block';
+  const { data: locs } = await sb.from('locales').select('id,nombre').eq('activo',true).order('nombre');
+  S.locales = locs||[];
+  $('vista-login').style.display='none'; $('vista-app').style.display='block';
+  await cargarLista();
+}
+
+async function cargarLista(){
+  // RLS ya limita: admin ve todos; encargado, los de sus locales
+  const [emps, asigs] = await Promise.all([
+    sb.from('empleados').select('*').is('fecha_baja', null).order('nombre'),
+    sb.from('asignaciones').select('empleado_id, local_id')
+  ]);
+  S.empleados = emps.data || [];
+  S.asigs = {};
+  for (const a of (asigs.data||[])){
+    (S.asigs[a.empleado_id] = S.asigs[a.empleado_id] || []).push(a.local_id);
+  }
+  pintarLista();
+}
+
+function nombreLocal(id){ return S.locales.find(l=>l.id===id)?.nombre || '—'; }
+
+function pintarLista(){
+  const f = S.filtro.toLowerCase();
+  const lista = S.empleados.filter(e => (`${e.nombre} ${e.apellidos||''}`).toLowerCase().includes(f));
+  $('lista-emp').innerHTML = lista.map(e => `
+    <div class="item-emp ${S.sel===e.id?'activo':''}" data-id="${e.id}">
+      <div class="avatar">${ini(e.nombre+' '+(e.apellidos||''))}</div>
+      <div><div class="np">${e.nombre} ${e.apellidos||''}</div>
+      <div class="sub">${nombreLocal(e.local_principal_id)}</div></div>
+    </div>`).join('') || '<div class="vacio">Sin resultados.</div>';
+}
+$('buscador').addEventListener('input', e=>{ S.filtro=e.target.value; pintarLista(); });
+$('lista-emp').addEventListener('click', e=>{
+  const item = e.target.closest('.item-emp'); if(!item) return;
+  S.sel = item.dataset.id; pintarLista(); pintarFicha();
+});
+
+// ---------- Ficha ----------
+async function pintarFicha(){
+  const e = S.empleados.find(x=>x.id===S.sel); if(!e) return;
+  const admin = S.rol==='admin';
+  const dis = admin ? '' : 'disabled';
+  const locales = S.asigs[e.id]?.map(nombreLocal).join(' · ') || 'Sin asignaciones';
+  $('ficha').innerHTML = `
+    <div class="cab-ficha">
+      <div class="avatar grande">${ini(e.nombre+' '+(e.apellidos||''))}</div>
+      <h2>${e.nombre} ${e.apellidos||''}</h2>
+      ${e.fichaje_movil?'<span class="badge movil">Fichaje móvil</span>':''}
+    </div>
+    <div class="subcab">Asignado a: ${locales}</div>
+
+    <div class="panel"><h3>Datos</h3>
+      <form id="form-datos">
+      <div class="grid-2">
+        <div><label>Nombre</label><input id="f-nombre" value="${e.nombre||''}" ${dis}></div>
+        <div><label>Apellidos</label><input id="f-apellidos" value="${e.apellidos||''}" ${dis}></div>
+        <div><label>Email</label><input id="f-email" value="${e.email||''}" ${dis}></div>
+        <div><label>Teléfono</label><input id="f-telefono" value="${e.telefono||''}" ${dis}></div>
+      </div>
+      <div class="grid-3">
+        <div><label>Local principal</label>
+          <select id="f-local" ${dis}>${S.locales.map(l=>`<option value="${l.id}" ${l.id===e.local_principal_id?'selected':''}>${l.nombre}</option>`).join('')}</select></div>
+        <div><label>Tipo de contrato</label><input id="f-contrato" value="${e.tipo_contrato||''}" placeholder="Indefinido, fijo-discontinuo…" ${dis}></div>
+        <div><label>Horas/semana</label><input id="f-horas" type="number" step="0.5" min="0" value="${e.horas_semana??''}" ${dis}></div>
+      </div>
+      <div class="check"><input type="checkbox" id="f-movil" ${e.fichaje_movil?'checked':''} ${dis}>
+        <label for="f-movil" style="margin:0">Puede fichar desde el móvil (con geolocalización)</label></div>
+      ${admin?`<div class="fila-acciones">
+        <button class="btn btn-primario" type="submit">Guardar cambios</button>
+        <button class="btn btn-peligro" type="button" id="btn-baja">Dar de baja</button>
+      </div>`:''}
+      </form>
+    </div>
+
+    <div class="panel"><h3>PIN de fichaje</h3>
+      <div class="pin-caja">
+        <span class="nota">El PIN no se puede consultar (solo se guarda cifrado).</span>
+        <button class="btn btn-fantasma" id="btn-pin">Generar nuevo PIN</button>
+        <span class="pin-valor" id="pin-nuevo"></span>
+      </div>
+      <div class="nota" id="pin-nota" style="margin-top:6px"></div>
+    </div>
+
+    <div class="panel"><h3>Fichajes · últimos 14 días</h3><div id="historico">Cargando…</div></div>`;
+
+  if (admin){
+    $('form-datos').addEventListener('submit', guardarDatos);
+    $('btn-baja').addEventListener('click', darBaja);
+  }
+  $('btn-pin').addEventListener('click', nuevoPin);
+  await pintarHistorico(e.id);
+}
+
+async function guardarDatos(ev){
+  ev.preventDefault();
+  const e = S.empleados.find(x=>x.id===S.sel);
+  const cambios = {
+    nombre: $('f-nombre').value.trim(), apellidos: $('f-apellidos').value.trim(),
+    email: $('f-email').value.trim()||null, telefono: $('f-telefono').value.trim()||null,
+    local_principal_id: $('f-local').value, tipo_contrato: $('f-contrato').value.trim()||null,
+    horas_semana: $('f-horas').value===''?null:Number($('f-horas').value),
+    fichaje_movil: $('f-movil').checked
+  };
+  const { error } = await sb.from('empleados').update(cambios).eq('id', e.id);
+  if (error){ toast('No se pudo guardar: '+error.message); return; }
+  // Si cambió el local principal y no hay asignación a ese local, crearla
+  if (cambios.local_principal_id !== e.local_principal_id
+      && !(S.asigs[e.id]||[]).includes(cambios.local_principal_id)){
+    await sb.from('asignaciones').insert({ empleado_id:e.id, local_id:cambios.local_principal_id });
+  }
+  toast('Ficha guardada'); await cargarLista(); pintarFicha();
+}
+
+async function darBaja(){
+  const e = S.empleados.find(x=>x.id===S.sel);
+  if (!confirm(`¿Dar de baja a ${e.nombre}? Dejará de aparecer en cuadrantes y no podrá fichar. Sus fichajes históricos se conservan (obligatorio legalmente).`)) return;
+  const { error } = await sb.from('empleados').update({ fecha_baja: new Date().toLocaleDateString('sv-SE') }).eq('id', e.id);
+  if (error){ toast('No se pudo: '+error.message); return; }
+  toast('Empleado dado de baja'); S.sel=null;
+  $('ficha').innerHTML='<div class="vacio">Elige a alguien de la lista.</div>';
+  await cargarLista();
+}
+
+async function nuevoPin(){
+  const e = S.empleados.find(x=>x.id===S.sel);
+  if (!confirm(`Generar un PIN nuevo para ${e.nombre}? El anterior dejará de funcionar al instante.`)) return;
+  const { data: ses } = await sb.auth.getSession();
+  const r = await fetch(URL_FN, { method:'POST',
+    headers:{ 'content-type':'application/json', 'authorization':'Bearer '+ses.session.access_token },
+    body: JSON.stringify({ accion:'nuevo_pin', empleado_id:e.id }) });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok || !d.ok){ toast(d.error||'No se pudo generar el PIN'); return; }
+  $('pin-nuevo').textContent = d.pin;
+  $('pin-nota').textContent = 'Apúntalo y dáselo ahora: no se volverá a mostrar.';
+}
+
+// ---------- Histórico ----------
+function efectivos(fichs){
+  const anulados = new Set(fichs.map(f=>f.corrige_a).filter(Boolean));
+  return { lista: fichs.filter(f=>!anulados.has(f.id)), anulados };
+}
+function horasDia(efs){
+  let neto=0, abierto=null, pausa=null, inc=0;
+  for (const f of efs){
+    const t = new Date(f.ts).getTime();
+    if (f.tipo==='entrada'){ if(abierto!==null) inc++; abierto=t; pausa=null; }
+    else if (f.tipo==='salida'){ if(abierto===null){inc++;continue;} if(pausa!==null){inc++;pausa=null;} neto+=t-abierto; abierto=null; }
+    else if (f.tipo==='pausa_inicio'){ if(abierto===null||pausa!==null) inc++; else pausa=t; }
+    else if (f.tipo==='pausa_fin'){ if(pausa===null) inc++; else { neto-=(t-pausa); pausa=null; } }
+  }
+  const abiertoHoy = abierto!==null;
+  if (abiertoHoy) inc = inc; // entrada sin salida se marca aparte
+  return { horas: neto/3600000, inc, abierto: abiertoHoy };
+}
+async function pintarHistorico(empId){
+  const desde = new Date(); desde.setDate(desde.getDate()-14); desde.setHours(0,0,0,0);
+  const { data } = await sb.from('fichajes').select('*')
+    .eq('empleado_id', empId).gte('ts', desde.toISOString()).order('ts');
+  const fichs = data||[];
+  if (!fichs.length){ $('historico').innerHTML='<div class="nota">Sin fichajes en las dos últimas semanas.</div>'; return; }
+  // Agrupar por día (hora local)
+  const dias = {};
+  for (const f of fichs){
+    const d = new Date(f.ts).toLocaleDateString('sv-SE');
+    (dias[d] = dias[d]||[]).push(f);
+  }
+  const hoy = new Date().toLocaleDateString('sv-SE');
+  let html='';
+  for (const d of Object.keys(dias).sort().reverse()){
+    const { lista, anulados } = efectivos(dias[d]);
+    const { horas, inc, abierto } = horasDia(lista);
+    const fLabel = new Date(d+'T12:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+    html += `<div class="dia-hist"><span class="f">${fLabel}</span><span class="h">${horas.toFixed(2)} h</span>`;
+    for (const f of dias[d]){
+      const anulado = anulados.has(f.id);
+      const clase = anulado ? f.tipo+' anulado' : (f.metodo==='correccion'?'correccion':f.tipo);
+      const hora = new Date(f.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      html += `<span class="chip ${clase}" title="${f.metodo==='correccion'?(f.motivo_correccion||''):f.metodo}">${NOMBRE_TIPO[f.tipo]} ${hora}</span>`;
+    }
+    if (abierto && d===hoy) html += '<span class="badge-inc" style="background:var(--entrada-f);color:var(--entrada)">En curso</span>';
+    else if (abierto) html += '<span class="badge-inc">⚠ sin salida</span>';
+    if (inc>0) html += `<span class="badge-inc">⚠ ${inc} incidencia${inc>1?'s':''}</span>`;
+    html += '</div>';
+  }
+  $('historico').innerHTML = html;
+}
+
+// ---------- Alta (solo admin) ----------
+$('btn-alta').addEventListener('click', async () => {
+  const nombre = prompt('Nombre del empleado:'); if(!nombre?.trim()) return;
+  const apellidos = prompt('Apellidos:') ?? '';
+  const opciones = S.locales.map((l,i)=>`${i+1}. ${l.nombre}`).join('\n');
+  const idx = Number(prompt(`Local principal (número):\n${opciones}`));
+  const local = S.locales[idx-1]; if(!local){ toast('Local no válido'); return; }
+  const { data, error } = await sb.from('empleados')
+    .insert({ nombre:nombre.trim(), apellidos:apellidos.trim(), local_principal_id:local.id,
+              fecha_alta: new Date().toLocaleDateString('sv-SE') })
+    .select('id').single();
+  if (error){ toast('No se pudo crear: '+error.message); return; }
+  await sb.from('asignaciones').insert({ empleado_id:data.id, local_id:local.id });
+  toast(`${nombre} añadido a ${local.nombre}`);
+  await cargarLista(); S.sel=data.id; pintarLista(); pintarFicha();
+});
+
+let toastTimer;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visible'),3200); }
+</script>
+</body>
+</html>

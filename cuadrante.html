@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadrante · Bonita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
+    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
+    --aviso:#B7791F; --aviso-fondo:#FBF3E0;
+    --publicado:#2F855A; --publicado-fondo:#E8F3EC;
+    --borrador-fondo:#FFFFFF; --ausencia-fondo:#F0EEE8;
+    --error:#B03A2E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+
+  /* ---------- Login ---------- */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
+  .brand{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+  .brand span{color:var(--mar)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:12px;margin:14px 0 6px;color:var(--tinta)}
+  input,select{width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
+  input:focus,select:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
+  .btn-primario{background:var(--mar);color:#fff;width:100%;margin-top:20px}
+  .btn-primario:hover{background:var(--mar-oscuro)}
+  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+
+  /* ---------- App ---------- */
+  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
+  header .brand{font-size:17px;margin-right:4px}
+  .tabs{display:flex;gap:16px;margin-right:8px}
+  .tabs a{color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'}
+  .tabs a.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
+  header select{width:auto;min-width:200px}
+  .sem-nav{display:flex;align-items:center;gap:6px}
+  .sem-nav button{background:#fff;border:1px solid var(--linea);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
+  .sem-nav .sem-label{font-weight:600;font-family:'Archivo';min-width:190px;text-align:center}
+  .spacer{flex:1}
+  .btn-publicar{background:var(--publicado);color:#fff}
+  .btn-publicar:disabled{background:var(--linea);color:var(--tinta-suave);cursor:default}
+  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
+  .chip-borradores{background:var(--aviso-fondo);color:var(--aviso);border-radius:20px;padding:5px 12px;font-weight:600;font-size:12px}
+
+  main{padding:18px 20px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:960px;background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden}
+  th,td{border:1px solid var(--linea);vertical-align:top}
+  thead th{background:var(--arena);font-family:'Archivo';font-size:12px;font-weight:600;padding:8px;text-align:center}
+  thead th.hoy{background:var(--mar);color:#fff}
+  td.nombre{background:#fff;padding:10px;min-width:150px;position:sticky;left:0;z-index:5;border-right:2px solid var(--linea)}
+  td.nombre .np{font-weight:600}
+  td.nombre .horas{font-size:11px;color:var(--tinta-suave);margin-top:2px}
+  td.nombre .horas.exceso{color:var(--aviso);font-weight:600}
+  td.celda{min-width:110px;height:64px;padding:4px;cursor:pointer;position:relative}
+  td.celda:hover{background:#F6F9F8}
+  td.celda.ausencia{background:var(--ausencia-fondo);cursor:pointer}
+  .tag-ausencia{font-size:10px;color:var(--tinta-suave);text-transform:uppercase;letter-spacing:.4px;padding:2px 4px}
+
+  .turno{border-radius:7px;padding:5px 7px;margin-bottom:4px;font-size:12px;line-height:1.35;cursor:pointer}
+  .turno .hh{font-weight:600;font-family:'Archivo'}
+  .turno .pu{color:var(--tinta-suave);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .turno.borrador{background:var(--borrador-fondo);border:1.5px dashed var(--mar)}
+  .turno.publicado{background:var(--publicado-fondo);border:1.5px solid var(--publicado)}
+  .turno .warn{color:var(--aviso);font-weight:700}
+  .turno.conflicto{border-color:var(--error)}
+
+  .leyenda{display:flex;gap:18px;margin-top:12px;color:var(--tinta-suave);font-size:12px;flex-wrap:wrap}
+  .leyenda span{display:inline-flex;align-items:center;gap:6px}
+  .muestra{width:22px;height:14px;border-radius:4px;display:inline-block}
+  .avisos-panel{margin-top:14px;background:var(--aviso-fondo);border:1px solid #EAD9AF;border-radius:10px;padding:12px 16px;font-size:13px;display:none}
+  .avisos-panel.visible{display:block}
+  .avisos-panel h3{font-size:13px;color:var(--aviso);margin-bottom:6px}
+  .avisos-panel div{margin:3px 0}
+  .vacio{text-align:center;padding:40px;color:var(--tinta-suave)}
+
+  /* ---------- Modal ---------- */
+  .modal-fondo{position:fixed;inset:0;background:rgba(28,43,51,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-fondo.visible{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:26px;width:100%;max-width:420px}
+  .modal h2{font-size:17px;margin-bottom:2px}
+  .modal .sub{color:var(--tinta-suave);font-size:13px;margin-bottom:10px}
+  .fila-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-acciones{display:flex;gap:10px;margin-top:22px}
+  .modal-acciones .btn{flex:1}
+  .btn-borrar{background:transparent;border:1px solid var(--error);color:var(--error)}
+  .aviso-modal{margin-top:10px;font-size:12px;color:var(--aviso)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none}
+  .toast.visible{opacity:1}
+  @media (prefers-reduced-motion: reduce){ .toast{transition:none} }
+</style>
+</head>
+<body>
+
+<div id="vista-login" class="login-wrap">
+  <form class="login-card" id="form-login">
+    <div class="brand">Cuadrante <span>Bonita</span></div>
+    <p>Planificación semanal de turnos</p>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" required>
+    <button class="btn btn-primario" type="submit">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+  </form>
+</div>
+
+<div id="vista-app" style="display:none">
+  <header>
+    <div class="brand">Cuadrante <span style="color:var(--mar)">Bonita</span></div>
+    <nav class="tabs">
+      <a class="activa" href="index.html">Planificación</a>
+      <a href="fichajes.html">Fichajes</a>
+      <a href="informes.html">Informes</a>
+      <a href="empleados.html">Empleados</a>
+    </nav>
+    <select id="sel-local" aria-label="Local"></select>
+    <div class="sem-nav">
+      <button id="sem-prev" aria-label="Semana anterior">‹</button>
+      <span class="sem-label" id="sem-label"></span>
+      <button id="sem-next" aria-label="Semana siguiente">›</button>
+      <button id="sem-hoy" class="btn btn-fantasma" style="height:34px">Hoy</button>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip-borradores" id="chip-borradores" style="display:none"></span>
+    <button class="btn btn-fantasma" id="btn-duplicar">Copiar semana anterior</button>
+    <button class="btn btn-publicar" id="btn-publicar">Publicar semana</button>
+    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
+  </header>
+
+  <main>
+    <div id="grid"></div>
+    <div class="leyenda">
+      <span><span class="muestra" style="border:1.5px dashed var(--mar);background:#fff"></span> Borrador (solo lo ves tú)</span>
+      <span><span class="muestra" style="border:1.5px solid var(--publicado);background:var(--publicado-fondo)"></span> Publicado (visible para el empleado)</span>
+      <span><span class="muestra" style="background:var(--ausencia-fondo);border:1px solid var(--linea)"></span> Ausencia aprobada</span>
+      <span style="color:var(--aviso)">⚠ Aviso de descanso u horas — no bloquea</span>
+    </div>
+    <div class="avisos-panel" id="avisos-panel"></div>
+  </main>
+</div>
+
+<div class="modal-fondo" id="modal-fondo">
+  <form class="modal" id="form-turno">
+    <h2 id="modal-titulo">Nuevo turno</h2>
+    <div class="sub" id="modal-sub"></div>
+    <div class="fila-2">
+      <div><label for="t-inicio">Entrada</label><input type="time" id="t-inicio" required step="300"></div>
+      <div><label for="t-fin">Salida</label><input type="time" id="t-fin" required step="300"></div>
+    </div>
+    <div class="fila-2">
+      <div><label for="t-pausa">Pausa (min)</label><input type="number" id="t-pausa" min="0" step="5" value="0"></div>
+      <div><label for="t-puesto">Puesto</label><input type="text" id="t-puesto" placeholder="Sala, cocina, barra…" list="lista-puestos">
+        <datalist id="lista-puestos"><option>Sala</option><option>Cocina</option><option>Barra</option><option>Office</option><option>Tienda</option></datalist>
+      </div>
+    </div>
+    <div class="aviso-modal" id="modal-aviso"></div>
+    <div class="modal-acciones">
+      <button type="button" class="btn btn-borrar" id="btn-borrar" style="display:none">Eliminar</button>
+      <button type="button" class="btn btn-fantasma" id="btn-cancelar">Cancelar</button>
+      <button type="submit" class="btn btn-primario" style="width:auto;margin:0">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const sb = createClient(
+  'https://cwhmyarbjyvkfskxreeo.supabase.co',
+  'sb_publishable_M-wEN03Ty8Gf1tSgni8PaA_V_F2-4vN'
+);
+
+// ---------- Estado ----------
+const S = {
+  user: null, rol: null,
+  locales: [], localId: null,
+  lunes: lunesDe(new Date()),
+  empleados: [], turnos: [], ausencias: [],
+  editando: null,      // turno en edición (o null si es nuevo)
+  celda: null          // {empleadoId, fecha} de la celda abierta
+};
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const $ = id => document.getElementById(id);
+
+// ---------- Utilidades de fechas y horas ----------
+function lunesDe(d){ const x=new Date(d); const dia=(x.getDay()+6)%7; x.setDate(x.getDate()-dia); x.setHours(0,0,0,0); return x; }
+function suma(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function iso(d){ return d.toISOString().slice(0,10); }
+function fmtCorta(d){ return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}); }
+function minutos(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+// Duración neta en horas; si la salida es <= entrada, el turno cruza medianoche (+24h)
+function horasNetas(t){
+  let dur = minutos(t.hora_fin) - minutos(t.hora_inicio);
+  if (dur <= 0) dur += 24*60;
+  return Math.max(0, dur - (t.pausa_min||0)) / 60;
+}
+function finAbsoluto(t){ // minutos desde las 00:00 del día del turno
+  let fin = minutos(t.hora_fin);
+  if (fin <= minutos(t.hora_inicio)) fin += 24*60;
+  return fin;
+}
+function hh(t){ return t.hora_inicio.slice(0,5)+'–'+t.hora_fin.slice(0,5); }
+
+// ---------- Arranque y sesión ----------
+sb.auth.onAuthStateChange(async (_ev, sesion) => {
+  if (sesion?.user && !S.user) { S.user = sesion.user; await iniciarApp(); }
+  if (!sesion?.user) { S.user = null; $('vista-app').style.display='none'; $('vista-login').style.display='flex'; }
+});
+
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('login-error').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('email').value.trim(), password: $('pass').value });
+  if (error) $('login-error').textContent = 'No se pudo entrar: revisa el email y la contraseña.';
+});
+$('btn-salir').addEventListener('click', () => sb.auth.signOut());
+
+async function iniciarApp(){
+  const { data: perfil, error } = await sb.from('perfiles').select('rol').eq('user_id', S.user.id).single();
+  if (error || !perfil){ $('login-error').textContent='Tu usuario no tiene perfil asignado. Habla con administración.'; await sb.auth.signOut(); return; }
+  S.rol = perfil.rol;
+
+  if (S.rol === 'admin'){
+    const { data } = await sb.from('locales').select('id,nombre').eq('activo', true).order('nombre');
+    S.locales = data || [];
+  } else {
+    const { data } = await sb.from('encargado_locales').select('local_id, locales(id,nombre)').eq('user_id', S.user.id);
+    S.locales = (data || []).map(r => r.locales).filter(Boolean).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  }
+  if (!S.locales.length){ $('login-error').textContent='No tienes ningún local asignado. Habla con administración.'; await sb.auth.signOut(); return; }
+
+  $('sel-local').innerHTML = S.locales.map(l=>`<option value="${l.id}">${l.nombre}</option>`).join('');
+  S.localId = S.locales[0].id;
+  $('vista-login').style.display='none';
+  $('vista-app').style.display='block';
+  await cargarSemana();
+}
+
+// ---------- Carga de datos ----------
+async function cargarSemana(){
+  const desde = iso(S.lunes), hasta = iso(suma(S.lunes,6));
+  $('sem-label').textContent = `${fmtCorta(S.lunes)} — ${fmtCorta(suma(S.lunes,6))}`;
+
+  const [emps, turnos, ausencias] = await Promise.all([
+    sb.from('asignaciones')
+      .select('empleado_id, empleados!inner(id,nombre,apellidos,horas_semana,fecha_baja)')
+      .eq('local_id', S.localId)
+      .or(`fecha_fin.is.null,fecha_fin.gte.${desde}`),
+    sb.from('turnos').select('*').eq('local_id', S.localId).gte('fecha', desde).lte('fecha', hasta),
+    sb.from('ausencias').select('*').eq('estado','aprobada').lte('fecha_inicio', hasta).gte('fecha_fin', desde)
+  ]);
+
+  const vistos = new Set();
+  S.empleados = (emps.data || [])
+    .map(r => r.empleados)
+    .filter(e => e && !e.fecha_baja && !vistos.has(e.id) && vistos.add(e.id))
+    .sort((a,b) => a.nombre.localeCompare(b.nombre));
+  S.turnos = turnos.data || [];
+  S.ausencias = ausencias.data || [];
+  render();
+}
+
+// ---------- Avisos (no bloqueantes) ----------
+// Descanso mínimo entre jornadas: 12h (Estatuto de los Trabajadores, art. 34.3).
+// Pendiente de contrastar con el convenio de hostelería de Baleares vigente.
+function calcularAvisos(){
+  const avisos = [];            // {texto}
+  const turnosConflicto = new Set();
+  for (const e of S.empleados){
+    const suyos = S.turnos.filter(t=>t.empleado_id===e.id).sort((a,b)=> a.fecha.localeCompare(b.fecha) || a.hora_inicio.localeCompare(b.hora_inicio));
+    // Horas de la semana vs contrato
+    const total = suyos.reduce((s,t)=>s+horasNetas(t),0);
+    e._horasSemana = total;
+    if (e.horas_semana && total > Number(e.horas_semana) + 0.01)
+      avisos.push(`${e.nombre}: ${total.toFixed(1)} h planificadas, contrato de ${e.horas_semana} h.`);
+    // Descanso entre turnos consecutivos y solapes el mismo día
+    for (let i=1;i<suyos.length;i++){
+      const a=suyos[i-1], b=suyos[i];
+      const diasEntre = (new Date(b.fecha) - new Date(a.fecha)) / 86400000;
+      const finA = diasEntre*24*60*-1 + finAbsoluto(a);      // relativo al día de b
+      const descanso = (minutos(b.hora_inicio) - finA) / 60;
+      if (a.fecha===b.fecha && minutos(b.hora_inicio) < finAbsoluto(a)){
+        avisos.push(`${e.nombre}: turnos solapados el ${DIAS[(new Date(b.fecha).getDay()+6)%7].toLowerCase()}.`);
+        turnosConflicto.add(a.id); turnosConflicto.add(b.id);
+      } else if (diasEntre<=1 && descanso < 12){
+        avisos.push(`${e.nombre}: solo ${descanso.toFixed(1)} h de descanso antes del turno del ${DIAS[(new Date(b.fecha).getDay()+6)%7].toLowerCase()} (mínimo 12 h).`);
+        turnosConflicto.add(b.id);
+      }
+    }
+    // Jornadas muy largas
+    for (const t of suyos) if (horasNetas(t) > 9)
+      avisos.push(`${e.nombre}: turno de ${horasNetas(t).toFixed(1)} h el ${DIAS[(new Date(t.fecha).getDay()+6)%7].toLowerCase()}.`);
+  }
+  return { avisos, turnosConflicto };
+}
+
+// ---------- Render ----------
+function ausenciaDe(empId, fecha){
+  return S.ausencias.find(a => a.empleado_id===empId && a.fecha_inicio<=fecha && a.fecha_fin>=fecha);
+}
+function render(){
+  const { avisos, turnosConflicto } = calcularAvisos();
+  const hoyIso = iso(new Date());
+
+  if (!S.empleados.length){
+    $('grid').innerHTML = '<div class="vacio">Este local no tiene empleados asignados todavía.<br>Se añaden desde administración.</div>';
+  } else {
+    let html = '<table><thead><tr><th style="min-width:150px">Equipo</th>';
+    for (let d=0; d<7; d++){
+      const f = suma(S.lunes,d);
+      html += `<th class="${iso(f)===hoyIso?'hoy':''}">${DIAS[d]}<br>${fmtCorta(f)}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+    for (const e of S.empleados){
+      const exceso = e.horas_semana && e._horasSemana > Number(e.horas_semana)+0.01;
+      html += `<tr><td class="nombre"><div class="np">${e.nombre} ${e.apellidos||''}</div>
+        <div class="horas ${exceso?'exceso':''}">${e._horasSemana.toFixed(1)} h${e.horas_semana?' / '+e.horas_semana+' h':''}</div></td>`;
+      for (let d=0; d<7; d++){
+        const fecha = iso(suma(S.lunes,d));
+        const aus = ausenciaDe(e.id, fecha);
+        const celdaTurnos = S.turnos.filter(t=>t.empleado_id===e.id && t.fecha===fecha)
+          .sort((a,b)=>a.hora_inicio.localeCompare(b.hora_inicio));
+        html += `<td class="celda ${aus?'ausencia':''}" data-emp="${e.id}" data-fecha="${fecha}">`;
+        if (aus) html += `<div class="tag-ausencia">${aus.tipo}</div>`;
+        for (const t of celdaTurnos){
+          const warn = turnosConflicto.has(t.id) ? '<span class="warn"> ⚠</span>' : '';
+          html += `<div class="turno ${t.estado} ${turnosConflicto.has(t.id)?'conflicto':''}" data-turno="${t.id}">
+            <div class="hh">${hh(t)}${warn}</div>${t.puesto?`<div class="pu">${t.puesto}</div>`:''}</div>`;
+        }
+        html += '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    $('grid').innerHTML = html;
+  }
+
+  const borradores = S.turnos.filter(t=>t.estado==='borrador').length;
+  $('chip-borradores').style.display = borradores ? 'inline-block' : 'none';
+  $('chip-borradores').textContent = `${borradores} sin publicar`;
+  $('btn-publicar').disabled = !borradores;
+
+  const panel = $('avisos-panel');
+  if (avisos.length){
+    panel.classList.add('visible');
+    panel.innerHTML = '<h3>⚠ Avisos de la semana (no bloquean)</h3>' + avisos.map(a=>`<div>${a}</div>`).join('');
+  } else panel.classList.remove('visible');
+}
+
+// ---------- Interacción con el grid ----------
+$('grid').addEventListener('click', e => {
+  const turnoEl = e.target.closest('.turno');
+  const celda = e.target.closest('td.celda');
+  if (turnoEl){
+    const t = S.turnos.find(x=>x.id===turnoEl.dataset.turno);
+    abrirModal({ empleadoId:t.empleado_id, fecha:t.fecha }, t);
+  } else if (celda){
+    const emp = celda.dataset.emp, fecha = celda.dataset.fecha;
+    const aus = ausenciaDe(emp, fecha);
+    if (aus && !confirm(`Este día tiene una ausencia aprobada (${aus.tipo}). ¿Crear turno igualmente?`)) return;
+    abrirModal({ empleadoId:emp, fecha }, null);
+  }
+});
+
+// ---------- Modal ----------
+function abrirModal(celda, turno){
+  S.celda = celda; S.editando = turno;
+  const e = S.empleados.find(x=>x.id===celda.empleadoId);
+  const f = new Date(celda.fecha);
+  $('modal-titulo').textContent = turno ? 'Editar turno' : 'Nuevo turno';
+  $('modal-sub').textContent = `${e?e.nombre:''} · ${DIAS[(f.getDay()+6)%7]} ${fmtCorta(f)}`;
+  $('t-inicio').value = turno ? turno.hora_inicio.slice(0,5) : '12:00';
+  $('t-fin').value    = turno ? turno.hora_fin.slice(0,5)    : '18:00';
+  $('t-pausa').value  = turno ? (turno.pausa_min||0) : 0;
+  $('t-puesto').value = turno ? (turno.puesto||'') : '';
+  $('btn-borrar').style.display = turno ? 'block' : 'none';
+  $('modal-aviso').textContent = turno && turno.estado==='publicado'
+    ? 'Este turno ya está publicado: el cambio será visible para el empleado al guardar.' : '';
+  $('modal-fondo').classList.add('visible');
+  $('t-inicio').focus();
+}
+function cerrarModal(){ $('modal-fondo').classList.remove('visible'); S.editando=null; S.celda=null; }
+$('btn-cancelar').addEventListener('click', cerrarModal);
+$('modal-fondo').addEventListener('click', e => { if (e.target===e.currentTarget) cerrarModal(); });
+
+$('form-turno').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fila = {
+    empleado_id: S.celda.empleadoId, local_id: S.localId, fecha: S.celda.fecha,
+    hora_inicio: $('t-inicio').value, hora_fin: $('t-fin').value,
+    pausa_min: Number($('t-pausa').value)||0, puesto: $('t-puesto').value.trim()||null
+  };
+  let error;
+  if (S.editando){
+    ({ error } = await sb.from('turnos').update(fila).eq('id', S.editando.id));
+  } else {
+    fila.creado_por = S.user.id;
+    ({ error } = await sb.from('turnos').insert(fila));
+  }
+  if (error){ $('modal-aviso').textContent = 'No se pudo guardar: '+error.message; return; }
+  cerrarModal(); toast('Turno guardado'); await cargarSemana();
+});
+
+$('btn-borrar').addEventListener('click', async () => {
+  if (!S.editando || !confirm('¿Eliminar este turno?')) return;
+  const { error } = await sb.from('turnos').delete().eq('id', S.editando.id);
+  if (error){ $('modal-aviso').textContent='No se pudo eliminar: '+error.message; return; }
+  cerrarModal(); toast('Turno eliminado'); await cargarSemana();
+});
+
+// ---------- Publicar y duplicar ----------
+$('btn-publicar').addEventListener('click', async () => {
+  const n = S.turnos.filter(t=>t.estado==='borrador').length;
+  if (!confirm(`Publicar ${n} turno${n===1?'':'s'} de esta semana? Serán visibles para el equipo.`)) return;
+  const { error } = await sb.from('turnos')
+    .update({ estado:'publicado', publicado_at: new Date().toISOString() })
+    .eq('local_id', S.localId).eq('estado','borrador')
+    .gte('fecha', iso(S.lunes)).lte('fecha', iso(suma(S.lunes,6)));
+  if (error){ toast('Error al publicar: '+error.message); return; }
+  toast('Semana publicada'); await cargarSemana();
+});
+
+$('btn-duplicar').addEventListener('click', async () => {
+  const desde = iso(suma(S.lunes,-7)), hasta = iso(suma(S.lunes,-1));
+  const { data: previos, error } = await sb.from('turnos').select('*')
+    .eq('local_id', S.localId).gte('fecha', desde).lte('fecha', hasta);
+  if (error){ toast('Error leyendo la semana anterior'); return; }
+  if (!previos?.length){ toast('La semana anterior está vacía'); return; }
+  const activos = new Set(S.empleados.map(e=>e.id));
+  const nuevos = previos.filter(t=>activos.has(t.empleado_id)).map(t=>({
+    empleado_id:t.empleado_id, local_id:t.local_id, fecha: iso(suma(new Date(t.fecha),7)),
+    hora_inicio:t.hora_inicio, hora_fin:t.hora_fin, pausa_min:t.pausa_min, puesto:t.puesto,
+    estado:'borrador', creado_por:S.user.id
+  }));
+  if (S.turnos.length && !confirm(`Esta semana ya tiene ${S.turnos.length} turnos. ¿Añadir ${nuevos.length} más copiados de la anterior?`)) return;
+  const { error: e2 } = await sb.from('turnos').insert(nuevos);
+  if (e2){ toast('Error al copiar: '+e2.message); return; }
+  toast(`${nuevos.length} turnos copiados como borrador`); await cargarSemana();
+});
+
+// ---------- Navegación ----------
+$('sel-local').addEventListener('change', e => { S.localId = e.target.value; cargarSemana(); });
+$('sem-prev').addEventListener('click', () => { S.lunes = suma(S.lunes,-7); cargarSemana(); });
+$('sem-next').addEventListener('click', () => { S.lunes = suma(S.lunes, 7); cargarSemana(); });
+$('sem-hoy').addEventListener('click', () => { S.lunes = lunesDe(new Date()); cargarSemana(); });
+
+let toastTimer;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visible'),2600); }
+</script>
+</body>
+</html>
