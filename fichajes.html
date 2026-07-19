@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fichajes · Bonita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
+    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
+    --entrada:#2F855A; --entrada-f:#E8F3EC; --salida:#B03A2E; --salida-f:#F9ECEA;
+    --pausa:#5A6B73; --pausa-f:#EFF1F0; --correccion:#7A5CA8; --correccion-f:#F1EDF7;
+    --aviso:#B7791F; --aviso-fondo:#FBF3E0; --error:#B03A2E;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
+  .brand{font-size:22px;font-weight:700}.brand span{color:var(--mar)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:12px;margin:14px 0 6px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
+  .btn-primario{background:var(--mar);color:#fff}
+  .btn-primario:hover{background:var(--mar-oscuro)}
+  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
+  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+
+  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
+  header .brand{font-size:17px}
+  header select{width:auto;min-width:200px}
+  header input[type=date]{width:auto}
+  .dia-nav{display:flex;align-items:center;gap:6px}
+  .dia-nav button{background:#fff;border:1px solid var(--linea);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
+  .spacer{flex:1}
+  nav a{color:var(--mar);font-weight:600;text-decoration:none;font-size:13px;margin-right:14px}
+
+  main{max-width:860px;margin:0 auto;padding:18px 20px}
+  .tarjeta{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .tarjeta .fila-cab{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .tarjeta h3{font-size:15px}
+  .horas-dia{font-family:'Archivo';font-weight:600;color:var(--mar)}
+  .badge{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px}
+  .badge.incidencia{background:var(--aviso-fondo);color:var(--aviso)}
+  .badge.encurso{background:var(--entrada-f);color:var(--entrada)}
+  .sin-fichajes{color:var(--tinta-suave);font-size:13px;margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{border-radius:8px;padding:6px 10px;font-size:12.5px;border:1.5px solid transparent;cursor:pointer}
+  .chip .t{font-weight:600;font-family:'Archivo'}
+  .chip.entrada{background:var(--entrada-f);border-color:var(--entrada)}
+  .chip.salida{background:var(--salida-f);border-color:var(--salida)}
+  .chip.pausa_inicio,.chip.pausa_fin{background:var(--pausa-f);border-color:var(--pausa)}
+  .chip.correccion{background:var(--correccion-f);border-color:var(--correccion)}
+  .chip.anulado{opacity:.45;text-decoration:line-through;cursor:default}
+  .chip .met{color:var(--tinta-suave);font-size:11px;margin-left:4px}
+  .acciones-emp{margin-top:10px}
+  .link-btn{background:none;border:none;color:var(--mar);font-weight:600;font-size:13px;cursor:pointer;padding:0}
+  .vacio{text-align:center;padding:40px;color:var(--tinta-suave)}
+  .leyenda{color:var(--tinta-suave);font-size:12px;margin:6px 0 16px}
+
+  .modal-fondo{position:fixed;inset:0;background:rgba(28,43,51,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-fondo.visible{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:26px;width:100%;max-width:420px}
+  .modal h2{font-size:17px}
+  .modal .sub{color:var(--tinta-suave);font-size:13px;margin-bottom:8px}
+  .fila-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-acciones{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none}
+  .toast.visible{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="vista-login" class="login-wrap">
+  <form class="login-card" id="form-login">
+    <div class="brand">Fichajes <span>Bonita</span></div>
+    <p>Registro horario del día</p>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" required>
+    <button class="btn btn-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+  </form>
+</div>
+
+<div id="vista-app" style="display:none">
+  <header>
+    <div class="brand">Fichajes <span style="color:var(--mar)">Bonita</span></div>
+    <nav><a href="index.html">← Cuadrante</a></nav>
+    <select id="sel-local" aria-label="Local"></select>
+    <div class="dia-nav">
+      <button id="dia-prev" aria-label="Día anterior">‹</button>
+      <input type="date" id="dia">
+      <button id="dia-next" aria-label="Día siguiente">›</button>
+      <button id="dia-hoy" class="btn btn-fantasma" style="height:34px">Hoy</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
+  </header>
+
+  <main>
+    <div class="leyenda">Verde entrada · rojo salida · gris pausa · morado corrección. Toca un fichaje para corregirlo.</div>
+    <div id="lista"></div>
+  </main>
+</div>
+
+<div class="modal-fondo" id="modal-fondo">
+  <form class="modal" id="form-corr">
+    <h2 id="modal-titulo">Añadir fichaje</h2>
+    <div class="sub" id="modal-sub"></div>
+    <div class="fila-2">
+      <div><label for="c-tipo">Tipo</label>
+        <select id="c-tipo">
+          <option value="entrada">Entrada</option><option value="salida">Salida</option>
+          <option value="pausa_inicio">Inicio de pausa</option><option value="pausa_fin">Fin de pausa</option>
+        </select></div>
+      <div><label for="c-hora">Hora</label><input type="time" id="c-hora" required></div>
+    </div>
+    <label for="c-motivo">Motivo (obligatorio, queda en el registro)</label>
+    <textarea id="c-motivo" rows="2" required placeholder="Ej.: olvidó fichar la salida al cerrar"></textarea>
+    <div class="error-msg" id="modal-error"></div>
+    <div class="modal-acciones">
+      <button type="button" class="btn btn-fantasma" id="btn-cancelar">Cancelar</button>
+      <button type="submit" class="btn btn-primario">Guardar corrección</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://cwhmyarbjyvkfskxreeo.supabase.co',
+  'sb_publishable_M-wEN03Ty8Gf1tSgni8PaA_V_F2-4vN'
+);
+
+const S = { user:null, rol:null, locales:[], localId:null, fecha: hoyIso(), empleados:[], fichajes:[], corr:null };
+const NOMBRE_TIPO = { entrada:'Entrada', salida:'Salida', pausa_inicio:'Pausa ▶', pausa_fin:'Pausa ■' };
+const MET = { tablet_pin:'tablet', movil_geo:'móvil', correccion:'corrección' };
+const $ = id => document.getElementById(id);
+
+function hoyIso(){ return new Date().toLocaleDateString('sv-SE'); } // YYYY-MM-DD en hora local
+function sumaDia(iso,n){ const d=new Date(iso+'T12:00'); d.setDate(d.getDate()+n); return d.toLocaleDateString('sv-SE'); }
+function horaDe(ts){ return new Date(ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); }
+
+sb.auth.onAuthStateChange(async (_e, ses) => {
+  if (ses?.user && !S.user){ S.user = ses.user; await iniciar(); }
+  if (!ses?.user){ S.user=null; $('vista-app').style.display='none'; $('vista-login').style.display='flex'; }
+});
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email:$('email').value.trim(), password:$('pass').value });
+  if (error) $('login-error').textContent = 'No se pudo entrar: revisa el email y la contraseña.';
+});
+$('btn-salir').addEventListener('click', ()=>sb.auth.signOut());
+
+async function iniciar(){
+  const { data: perfil } = await sb.from('perfiles').select('rol').eq('user_id', S.user.id).single();
+  if (!perfil || perfil.rol === 'empleado'){
+    $('login-error').textContent='Esta pantalla es para encargados y administración.';
+    await sb.auth.signOut(); return;
+  }
+  S.rol = perfil.rol;
+  if (S.rol === 'admin'){
+    const { data } = await sb.from('locales').select('id,nombre').eq('activo',true).order('nombre');
+    S.locales = data||[];
+  } else {
+    const { data } = await sb.from('encargado_locales').select('locales(id,nombre)').eq('user_id', S.user.id);
+    S.locales = (data||[]).map(r=>r.locales).filter(Boolean).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  }
+  $('sel-local').innerHTML = S.locales.map(l=>`<option value="${l.id}">${l.nombre}</option>`).join('');
+  S.localId = S.locales[0]?.id;
+  $('dia').value = S.fecha;
+  $('vista-login').style.display='none'; $('vista-app').style.display='block';
+  await cargar();
+}
+
+async function cargar(){
+  const ini = new Date(S.fecha+'T00:00').toISOString();
+  const fin = new Date(S.fecha+'T00:00'); fin.setDate(fin.getDate()+1);
+  const [emps, fichs] = await Promise.all([
+    sb.from('asignaciones')
+      .select('empleados!inner(id,nombre,apellidos,fecha_baja)')
+      .eq('local_id', S.localId)
+      .or(`fecha_fin.is.null,fecha_fin.gte.${S.fecha}`),
+    sb.from('fichajes').select('*').eq('local_id', S.localId)
+      .gte('ts', ini).lt('ts', fin.toISOString()).order('ts')
+  ]);
+  const vistos = new Set();
+  S.empleados = (emps.data||[]).map(r=>r.empleados)
+    .filter(e=>e && !e.fecha_baja && !vistos.has(e.id) && vistos.add(e.id))
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  S.fichajes = fichs.data||[];
+  render();
+}
+
+// Fichajes efectivos: los anulados por una corrección no cuentan
+function efectivosDe(empId){
+  const suyos = S.fichajes.filter(f=>f.empleado_id===empId);
+  const anulados = new Set(suyos.map(f=>f.corrige_a).filter(Boolean));
+  return { efectivos: suyos.filter(f=>!anulados.has(f.id)), anulados };
+}
+
+// Horas netas del día a partir de los fichajes efectivos
+function calcular(efectivos){
+  let neto=0, abierto=null, pausa=null, incid=[], enCurso=false;
+  for (const f of efectivos){
+    const t = new Date(f.ts).getTime();
+    if (f.tipo==='entrada'){
+      if (abierto!==null) incid.push('dos entradas seguidas');
+      abierto = t; pausa = null;
+    } else if (f.tipo==='salida'){
+      if (abierto===null){ incid.push('salida sin entrada'); continue; }
+      if (pausa!==null){ incid.push('pausa sin cerrar'); pausa=null; }
+      neto += t - abierto; abierto = null;
+    } else if (f.tipo==='pausa_inicio'){
+      if (abierto===null) incid.push('pausa fuera de jornada');
+      else if (pausa!==null) incid.push('dos inicios de pausa');
+      else pausa = t;
+    } else if (f.tipo==='pausa_fin'){
+      if (pausa===null) incid.push('fin de pausa sin inicio');
+      else { neto -= (t - pausa); pausa = null; }
+    }
+  }
+  if (abierto!==null){
+    if (S.fecha === hoyIso()) enCurso = true;
+    else incid.push('entrada sin salida');
+  }
+  return { horas: neto/3600000, incid: [...new Set(incid)], enCurso };
+}
+
+function render(){
+  if (!S.empleados.length){ $('lista').innerHTML='<div class="vacio">Este local no tiene empleados asignados.</div>'; return; }
+  let html='';
+  for (const e of S.empleados){
+    const { efectivos, anulados } = efectivosDe(e.id);
+    const todos = S.fichajes.filter(f=>f.empleado_id===e.id);
+    const { horas, incid, enCurso } = calcular(efectivos);
+    html += `<div class="tarjeta"><div class="fila-cab">
+      <h3>${e.nombre} ${e.apellidos||''}</h3>
+      ${todos.length?`<span class="horas-dia">${horas.toFixed(2)} h</span>`:''}
+      ${enCurso?'<span class="badge encurso">En curso</span>':''}
+      ${incid.map(i=>`<span class="badge incidencia">⚠ ${i}</span>`).join('')}
+    </div>`;
+    if (!todos.length) html += '<div class="sin-fichajes">Sin fichajes este día.</div>';
+    else {
+      html += '<div class="chips">';
+      for (const f of todos){
+        const anulado = anulados.has(f.id);
+        const clase = anulado ? f.tipo+' anulado' : (f.metodo==='correccion' ? 'correccion' : f.tipo);
+        const titulo = f.metodo==='correccion' ? `Corrección: ${f.motivo_correccion||''}` : MET[f.metodo]||'';
+        html += `<div class="chip ${clase}" data-id="${f.id}" title="${titulo}">
+          <span class="t">${NOMBRE_TIPO[f.tipo]}</span> ${horaDe(f.ts)}
+          <span class="met">${f.metodo==='correccion'?'✎':''}${anulado?' anulado':''}</span></div>`;
+      }
+      html += '</div>';
+    }
+    html += `<div class="acciones-emp"><button class="link-btn" data-add="${e.id}">+ Añadir fichaje que falta</button></div></div>`;
+  }
+  $('lista').innerHTML = html;
+}
+
+// ---------- Correcciones ----------
+$('lista').addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  const chip = e.target.closest('.chip:not(.anulado)');
+  if (add) abrirModal(add.dataset.add, null);
+  else if (chip){
+    const f = S.fichajes.find(x=>x.id===chip.dataset.id);
+    if (f) abrirModal(f.empleado_id, f);
+  }
+});
+
+function abrirModal(empId, original){
+  const e = S.empleados.find(x=>x.id===empId);
+  S.corr = { empId, original };
+  $('modal-titulo').textContent = original ? 'Corregir fichaje' : 'Añadir fichaje';
+  $('modal-sub').textContent = `${e?e.nombre:''} · ${S.fecha}` + (original ? ` · sustituye a ${NOMBRE_TIPO[original.tipo]} ${horaDe(original.ts)}` : '');
+  $('c-tipo').value = original ? original.tipo : 'salida';
+  $('c-hora').value = original ? new Date(original.ts).toTimeString().slice(0,5) : '';
+  $('c-motivo').value = ''; $('modal-error').textContent='';
+  $('modal-fondo').classList.add('visible'); $('c-hora').focus();
+}
+$('btn-cancelar').addEventListener('click', ()=>$('modal-fondo').classList.remove('visible'));
+$('modal-fondo').addEventListener('click', e=>{ if(e.target===e.currentTarget) $('modal-fondo').classList.remove('visible'); });
+
+$('form-corr').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fila = {
+    empleado_id: S.corr.empId, local_id: S.localId,
+    tipo: $('c-tipo').value, metodo: 'correccion',
+    ts: new Date(`${S.fecha}T${$('c-hora').value}`).toISOString(),
+    corrige_a: S.corr.original?.id ?? null,
+    motivo_correccion: $('c-motivo').value.trim(),
+    corregido_por: S.user.id
+  };
+  if (!fila.motivo_correccion){ $('modal-error').textContent='El motivo es obligatorio.'; return; }
+  const { error } = await sb.from('fichajes').insert(fila);
+  if (error){ $('modal-error').textContent='No se pudo guardar: '+error.message; return; }
+  $('modal-fondo').classList.remove('visible'); toast('Corrección registrada'); await cargar();
+});
+
+// ---------- Navegación ----------
+$('sel-local').addEventListener('change', e=>{ S.localId=e.target.value; cargar(); });
+$('dia').addEventListener('change', e=>{ S.fecha=e.target.value; cargar(); });
+$('dia-prev').addEventListener('click', ()=>{ S.fecha=sumaDia(S.fecha,-1); $('dia').value=S.fecha; cargar(); });
+$('dia-next').addEventListener('click', ()=>{ S.fecha=sumaDia(S.fecha, 1); $('dia').value=S.fecha; cargar(); });
+$('dia-hoy').addEventListener('click', ()=>{ S.fecha=hoyIso(); $('dia').value=S.fecha; cargar(); });
+
+let toastTimer;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visible'),2600); }
+</script>
+</body>
+</html>
