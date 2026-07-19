@@ -36,6 +36,9 @@
   /* ---------- App ---------- */
   header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
   header .brand{font-size:17px;margin-right:4px}
+  .tabs{display:flex;gap:16px;margin-right:8px}
+  .tabs a{color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'}
+  .tabs a.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
   header select{width:auto;min-width:200px}
   .sem-nav{display:flex;align-items:center;gap:6px}
   .sem-nav button{background:#fff;border:1px solid var(--linea);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
@@ -111,6 +114,12 @@
 <div id="vista-app" style="display:none">
   <header>
     <div class="brand">Cuadrante <span style="color:var(--mar)">Bonita</span></div>
+    <nav class="tabs">
+      <a class="activa" href="index.html">Planificación</a>
+      <a href="fichajes.html">Fichajes</a>
+      <a href="informes.html">Informes</a>
+      <a href="empleados.html">Empleados</a>
+    </nav>
     <select id="sel-local" aria-label="Local"></select>
     <div class="sem-nav">
       <button id="sem-prev" aria-label="Semana anterior">‹</button>
