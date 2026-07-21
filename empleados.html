@@ -118,6 +118,8 @@
   <div class="layout">
     <aside>
       <input class="buscador" id="buscador" placeholder="Buscar por nombre…">
+      <select id="filtro-depto" style="margin-bottom:8px"></select>
+      <div style="font-size:11.5px;color:var(--tinta-suave);margin:0 0 6px 2px" id="contador"></div>
       <div class="lista-emp" id="lista-emp"></div>
     </aside>
     <section id="ficha"><div class="vacio">Elige a alguien de la lista.</div></section>
@@ -134,7 +136,8 @@ const sb = createClient(
 );
 const URL_FN = 'https://cwhmyarbjyvkfskxreeo.supabase.co/functions/v1/fichar';
 
-const S = { user:null, rol:null, empleados:[], locales:[], asigs:{}, sel:null, filtro:'' };
+const S = { user:null, rol:null, empleados:[], locales:[], asigs:{}, sel:null, filtro:'', depto:'' };
+const DEPTOS = ['Sala','Cocina','Recepción','Visitas','Tienda','Bodega','Campo','Mantenimiento','Administración','Dirección'];
 const NOMBRE_TIPO = { entrada:'Entrada', salida:'Salida', pausa_inicio:'Pausa ▶', pausa_fin:'Pausa ■' };
 const $ = id => document.getElementById(id);
 const ini = n => n.split(/\s+/).map(p=>p[0]||'').join('').slice(0,2).toUpperCase();
@@ -182,15 +185,22 @@ function nombreLocal(id){ return S.locales.find(l=>l.id===id)?.nombre || '—'; 
 
 function pintarLista(){
   const f = S.filtro.toLowerCase();
-  const lista = S.empleados.filter(e => (`${e.nombre} ${e.apellidos||''}`).toLowerCase().includes(f));
+  const lista = S.empleados.filter(e =>
+    (`${e.nombre} ${e.apellidos||''}`).toLowerCase().includes(f) &&
+    (!S.depto || e.departamento === S.depto));
+  const usados = [...new Set(S.empleados.map(e=>e.departamento).filter(Boolean))].sort();
+  $('filtro-depto').innerHTML = '<option value="">Todos los departamentos</option>'
+    + usados.map(d=>`<option value="${d}" ${S.depto===d?'selected':''}>${d}</option>`).join('');
+  $('contador').textContent = `${lista.length} de ${S.empleados.length}`;
   $('lista-emp').innerHTML = lista.map(e => `
     <div class="item-emp ${S.sel===e.id?'activo':''}" data-id="${e.id}">
       <div class="avatar">${ini(e.nombre+' '+(e.apellidos||''))}</div>
       <div><div class="np">${e.nombre} ${e.apellidos||''}</div>
-      <div class="sub">${nombreLocal(e.local_principal_id)}</div></div>
+      <div class="sub">${nombreLocal(e.local_principal_id)}${e.departamento?' · '+e.departamento:''}</div></div>
     </div>`).join('') || '<div class="vacio">Sin resultados.</div>';
 }
 $('buscador').addEventListener('input', e=>{ S.filtro=e.target.value; pintarLista(); });
+$('filtro-depto').addEventListener('change', e=>{ S.depto=e.target.value; pintarLista(); });
 $('lista-emp').addEventListener('click', e=>{
   const item = e.target.closest('.item-emp'); if(!item) return;
   S.sel = item.dataset.id; pintarLista(); pintarFicha();
@@ -206,6 +216,7 @@ async function pintarFicha(){
     <div class="cab-ficha">
       <div class="avatar grande">${ini(e.nombre+' '+(e.apellidos||''))}</div>
       <h2>${e.nombre} ${e.apellidos||''}</h2>
+      ${e.departamento?`<span class="badge" style="background:var(--arena)">${e.departamento}</span>`:''}
       ${e.fichaje_movil?'<span class="badge movil">Fichaje móvil</span>':''}
     </div>
     <div class="subcab">Asignado a: ${locales}</div>
@@ -221,8 +232,14 @@ async function pintarFicha(){
       <div class="grid-3">
         <div><label>Local principal</label>
           <select id="f-local" ${dis}>${S.locales.map(l=>`<option value="${l.id}" ${l.id===e.local_principal_id?'selected':''}>${l.nombre}</option>`).join('')}</select></div>
-        <div><label>Tipo de contrato</label><input id="f-contrato" value="${e.tipo_contrato||''}" placeholder="Indefinido, fijo-discontinuo…" ${dis}></div>
+        <div><label>Departamento</label>
+          <input id="f-depto" value="${e.departamento||''}" list="lista-deptos" placeholder="Sala, Cocina…" ${dis}>
+          <datalist id="lista-deptos">${DEPTOS.map(d=>`<option>${d}</option>`).join('')}</datalist></div>
         <div><label>Horas/semana</label><input id="f-horas" type="number" step="0.5" min="0" value="${e.horas_semana??''}" ${dis}></div>
+      </div>
+      <div class="grid-2">
+        <div><label>Tipo de contrato</label><input id="f-contrato" value="${e.tipo_contrato||''}" placeholder="Indefinido, fijo-discontinuo…" ${dis}></div>
+        <div></div>
       </div>
       <div class="check"><input type="checkbox" id="f-movil" ${e.fichaje_movil?'checked':''} ${dis}>
         <label for="f-movil" style="margin:0">Puede fichar desde el móvil (con geolocalización)</label></div>
@@ -259,6 +276,7 @@ async function guardarDatos(ev){
     nombre: $('f-nombre').value.trim(), apellidos: $('f-apellidos').value.trim(),
     email: $('f-email').value.trim()||null, telefono: $('f-telefono').value.trim()||null,
     local_principal_id: $('f-local').value, tipo_contrato: $('f-contrato').value.trim()||null,
+    departamento: $('f-depto').value.trim()||null,
     horas_semana: $('f-horas').value===''?null:Number($('f-horas').value),
     fichaje_movil: $('f-movil').checked
   };
