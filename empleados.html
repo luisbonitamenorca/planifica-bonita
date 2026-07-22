@@ -119,6 +119,7 @@
   <div class="layout">
     <aside>
       <input class="buscador" id="buscador" placeholder="Buscar por nombre…">
+      <select id="filtro-local" style="margin-bottom:6px"></select>
       <select id="filtro-depto" style="margin-bottom:8px"></select>
       <div style="font-size:11.5px;color:var(--tinta-suave);margin:0 0 6px 2px" id="contador"></div>
       <div class="lista-emp" id="lista-emp"></div>
@@ -137,7 +138,7 @@ const sb = createClient(
 );
 const URL_FN = 'https://cwhmyarbjyvkfskxreeo.supabase.co/functions/v1/fichar';
 
-const S = { user:null, rol:null, empleados:[], locales:[], deptos:[], contratos:[], asigs:{}, sel:null, filtro:'', depto:'' };
+const S = { user:null, rol:null, empleados:[], locales:[], deptos:[], contratos:[], asigs:{}, sel:null, filtro:'', depto:'', local:'' };
 const NOMBRE_TIPO = { entrada:'Entrada', salida:'Salida', pausa_inicio:'Pausa ▶', pausa_fin:'Pausa ■' };
 const $ = id => document.getElementById(id);
 const ini = n => n.split(/\s+/).map(p=>p[0]||'').join('').slice(0,2).toUpperCase();
@@ -161,14 +162,20 @@ async function iniciar(){
   }
   S.rol = perfil.rol;
   if (S.rol === 'admin') $('btn-alta').style.display='inline-block';
-  const [locs, deptos, contratos] = await Promise.all([
+  const [locs, deptos, contratos, matriz] = await Promise.all([
     sb.from('locales').select('id,nombre').eq('activo',true).order('nombre'),
-    sb.from('departamentos').select('nombre').eq('activo',true).order('orden'),
-    sb.from('tipos_contrato').select('nombre').eq('activo',true).order('orden')
+    sb.from('departamentos').select('id,nombre').eq('activo',true).order('orden'),
+    sb.from('tipos_contrato').select('nombre').eq('activo',true).order('orden'),
+    sb.from('local_departamentos').select('local_id, departamentos(nombre)')
   ]);
   S.locales = locs.data||[];
   S.deptos = (deptos.data||[]).map(d=>d.nombre);
   S.contratos = (contratos.data||[]).map(c=>c.nombre);
+  // Mapa local_id -> [nombres de departamento]
+  S.deptosPorLocal = {};
+  for (const r of (matriz.data||[])){
+    if (r.departamentos) (S.deptosPorLocal[r.local_id] = S.deptosPorLocal[r.local_id]||[]).push(r.departamentos.nombre);
+  }
   $('vista-login').style.display='none'; $('vista-app').style.display='block';
   await cargarLista();
 }
@@ -193,10 +200,18 @@ function pintarLista(){
   const f = S.filtro.toLowerCase();
   const lista = S.empleados.filter(e =>
     (`${e.nombre} ${e.apellidos||''}`).toLowerCase().includes(f) &&
-    (!S.depto || e.departamento === S.depto));
-  const usados = [...new Set(S.empleados.map(e=>e.departamento).filter(Boolean))].sort();
+    (!S.depto || e.departamento === S.depto) &&
+    (!S.local || e.local_principal_id === S.local));
+  // Poblar selector de centro (todos los locales con empleados)
+  const localesUsados = [...new Set(S.empleados.map(e=>e.local_principal_id).filter(Boolean))];
+  $('filtro-local').innerHTML = '<option value="">Todos los centros</option>'
+    + S.locales.filter(l=>localesUsados.includes(l.id))
+        .map(l=>`<option value="${l.id}" ${S.local===l.id?'selected':''}>${l.nombre}</option>`).join('');
+  // Poblar selector de departamento (si hay centro elegido, solo los de ese centro)
+  const baseDep = S.local ? S.empleados.filter(e=>e.local_principal_id===S.local) : S.empleados;
+  const deptosUsados = [...new Set(baseDep.map(e=>e.departamento).filter(Boolean))].sort();
   $('filtro-depto').innerHTML = '<option value="">Todos los departamentos</option>'
-    + usados.map(d=>`<option value="${d}" ${S.depto===d?'selected':''}>${d}</option>`).join('');
+    + deptosUsados.map(d=>`<option value="${d}" ${S.depto===d?'selected':''}>${d}</option>`).join('');
   $('contador').textContent = `${lista.length} de ${S.empleados.length}`;
   $('lista-emp').innerHTML = lista.map(e => `
     <div class="item-emp ${S.sel===e.id?'activo':''}" data-id="${e.id}">
@@ -206,6 +221,7 @@ function pintarLista(){
     </div>`).join('') || '<div class="vacio">Sin resultados.</div>';
 }
 $('buscador').addEventListener('input', e=>{ S.filtro=e.target.value; pintarLista(); });
+$('filtro-local').addEventListener('change', e=>{ S.local=e.target.value; S.depto=''; pintarLista(); });
 $('filtro-depto').addEventListener('change', e=>{ S.depto=e.target.value; pintarLista(); });
 $('lista-emp').addEventListener('click', e=>{
   const item = e.target.closest('.item-emp'); if(!item) return;
@@ -239,11 +255,7 @@ async function pintarFicha(){
         <div><label>Local principal</label>
           <select id="f-local" ${dis}>${S.locales.map(l=>`<option value="${l.id}" ${l.id===e.local_principal_id?'selected':''}>${l.nombre}</option>`).join('')}</select></div>
         <div><label>Departamento</label>
-          <select id="f-depto" ${dis}>
-            <option value="">— sin asignar —</option>
-            ${S.deptos.map(d=>`<option ${d===e.departamento?'selected':''}>${d}</option>`).join('')}
-            ${e.departamento && !S.deptos.includes(e.departamento)?`<option selected>${e.departamento}</option>`:''}
-          </select></div>
+          <select id="f-depto" ${dis}></select></div>
         <div><label>Horas/semana</label><input id="f-horas" type="number" step="0.5" min="0" value="${e.horas_semana??''}" ${dis}></div>
       </div>
       <div class="grid-2">
@@ -275,12 +287,29 @@ async function pintarFicha(){
 
     <div class="panel"><h3>Fichajes · últimos 14 días</h3><div id="historico">Cargando…</div></div>`;
 
+  // Rellenar departamentos según el centro actual, y recalcular al cambiar de centro
+  poblarDeptos(e.local_principal_id, e.departamento);
   if (admin){
     $('form-datos').addEventListener('submit', guardarDatos);
     $('btn-baja').addEventListener('click', darBaja);
+    $('f-local').addEventListener('change', ()=> poblarDeptos($('f-local').value, null));
   }
   $('btn-pin').addEventListener('click', nuevoPin);
   await pintarHistorico(e.id);
+}
+
+// Rellena el <select> de departamento con los del centro dado.
+// Mantiene el valor actual del empleado aunque no esté en la lista del centro (no lo pierde).
+function poblarDeptos(localId, actual){
+  const sel = $('f-depto'); if(!sel) return;
+  const permitidos = S.deptosPorLocal[localId] || [];
+  // Si el centro no tiene departamentos definidos, se ofrecen todos (evita bloquear la edición)
+  const lista = permitidos.length ? permitidos : S.deptos;
+  let html = '<option value="">— sin asignar —</option>'
+    + lista.map(d=>`<option ${d===actual?'selected':''}>${d}</option>`).join('');
+  if (actual && !lista.includes(actual))
+    html += `<option selected>${actual} (otro centro)</option>`;
+  sel.innerHTML = html;
 }
 
 async function guardarDatos(ev){
@@ -290,7 +319,7 @@ async function guardarDatos(ev){
     nombre: $('f-nombre').value.trim(), apellidos: $('f-apellidos').value.trim(),
     email: $('f-email').value.trim()||null, telefono: $('f-telefono').value.trim()||null,
     local_principal_id: $('f-local').value, tipo_contrato: $('f-contrato').value.trim()||null,
-    departamento: $('f-depto').value.trim()||null,
+    departamento: ($('f-depto').value.replace(/ \(otro centro\)$/,'').trim())||null,
     horas_semana: $('f-horas').value===''?null:Number($('f-horas').value),
     fichaje_movil: $('f-movil').checked
   };

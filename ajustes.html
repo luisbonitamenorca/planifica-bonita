@@ -114,6 +114,7 @@
       <button class="nav-sec" data-sec="locales">Locales y fichaje<small>Ubicación y radio</small></button>
       <button class="nav-sec" data-sec="ausencias">Tipos de ausencia<small>Catálogo y vacaciones</small></button>
       <button class="nav-sec" data-sec="catalogos">Departamentos y contratos<small>Listas de la ficha de empleado</small></button>
+      <button class="nav-sec" data-sec="matriz">Departamentos por centro<small>Qué departamento hay en cada local</small></button>
     </aside>
     <section id="contenido"><div class="vacio">Cargando…</div></section>
   </div>
@@ -156,7 +157,7 @@ document.querySelectorAll('.nav-sec').forEach(b =>
 function pintar(sec){
   S.sec = sec;
   document.querySelectorAll('.nav-sec').forEach(b=>b.classList.toggle('activa', b.dataset.sec===sec));
-  ({ convenios: secConvenios, locales: secLocales, ausencias: secAusencias, catalogos: secCatalogos })[sec]();
+  ({ convenios: secConvenios, locales: secLocales, ausencias: secAusencias, catalogos: secCatalogos, matriz: secMatriz })[sec]();
 }
 
 // ---------- CONVENIOS Y REGLAS ----------
@@ -326,6 +327,47 @@ async function añadirTipo(){
   const { error } = await sb.from('tipos_ausencia').insert({ nombre, orden: 100 });
   if (error){ toast('No se pudo añadir: '+error.message); return; }
   toast('Tipo añadido'); secAusencias();
+}
+
+// ---------- MATRIZ DEPARTAMENTOS × CENTRO ----------
+async function secMatriz(){
+  $('contenido').innerHTML = '<div class="vacio">Cargando…</div>';
+  const [loc, dep, rel] = await Promise.all([
+    sb.from('locales').select('id,nombre').eq('activo',true).order('nombre'),
+    sb.from('departamentos').select('id,nombre').eq('activo',true).order('orden'),
+    sb.from('local_departamentos').select('local_id,departamento_id')
+  ]);
+  const locales = loc.data||[], deptos = dep.data||[];
+  const activos = new Set((rel.data||[]).map(r=>`${r.local_id}|${r.departamento_id}`));
+  $('contenido').innerHTML = `
+    <h2>Departamentos por centro</h2>
+    <div class="sub">Marca qué departamentos existen en cada centro. En la ficha del empleado, el desplegable de departamento mostrará solo los de su centro.</div>
+    <div class="aviso-caja">Marcado inicial según lo que ya tienen tus empleados. Revísalo: verás casillas heredadas del histórico (p. ej. Cocina en Oficina) que quizá quieras desmarcar.</div>
+    <div class="panel" style="overflow-x:auto">
+      <table style="min-width:640px"><thead><tr>
+        <th style="position:sticky;left:0;background:#fff">Centro</th>
+        ${deptos.map(d=>`<th class="c" style="writing-mode:vertical-rl;transform:rotate(180deg);height:90px;white-space:nowrap">${d.nombre}</th>`).join('')}
+      </tr></thead><tbody>
+        ${locales.map(l=>`<tr>
+          <td style="position:sticky;left:0;background:#fff;font-weight:600">${l.nombre}</td>
+          ${deptos.map(d=>`<td class="c"><label class="switch">
+            <input type="checkbox" data-l="${l.id}" data-d="${d.id}" ${activos.has(`${l.id}|${d.id}`)?'checked':''}>
+            <span class="slider"></span></label></td>`).join('')}
+        </tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  document.querySelectorAll('[data-l][data-d]').forEach(chk=>
+    chk.addEventListener('change', async ()=>{
+      const local_id = chk.dataset.l, departamento_id = chk.dataset.d;
+      let error;
+      if (chk.checked)
+        ({ error } = await sb.from('local_departamentos').insert({ local_id, departamento_id }));
+      else
+        ({ error } = await sb.from('local_departamentos').delete()
+          .eq('local_id', local_id).eq('departamento_id', departamento_id));
+      if (error){ toast('No se pudo guardar'); chk.checked=!chk.checked; }
+      else toast('Guardado');
+    }));
 }
 
 let toastTimer;
