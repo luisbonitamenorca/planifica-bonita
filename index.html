@@ -425,7 +425,7 @@ async function arrancar(){
   }
   APP.rol = perfil.rol;
   if (APP.rol === 'admin') $('tab-ajustes').style.display='inline-block';
-  $('vista-login').style.display='none'; $('vista-app').style.display='block';
+  $('vista-login').style.display='none'; $('vista-app').style.display='flex';
   // Sección inicial: según el hash de la URL, o Planificación
   const inicial = (location.hash||'').replace('#','') || 'planificacion';
   irASeccion(['planificacion','fichajes','informes','empleados','ajustes'].includes(inicial)?inicial:'planificacion');
