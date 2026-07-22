@@ -4,53 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planifica Bonita</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
-    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
-    --aviso:#B7791F; --aviso-fondo:#FBF3E0;
-    --publicado:#2F855A; --publicado-fondo:#E8F3EC;
-    --borrador-fondo:#FFFFFF; --ausencia-fondo:#F0EEE8;
-    --error:#B03A2E;
-    --entrada:#2F855A; --entrada-f:#E8F3EC; --salida:#B03A2E; --salida-f:#F9ECEA;
-    --pausa:#5A6B73; --pausa-f:#EFF1F0; --correccion:#7A5CA8; --correccion-f:#F1EDF7;
-    --ok:#2F855A; --ok-f:#E8F3EC;
-    --mas:#B03A2E; --menos:#2F855A;
+    /* Paleta unificada con Ratios */
+    --green:#1D9E75; --green-dark:#085041; --green-light:#E1F5EE;
+    --blue:#185FA5; --blue-light:#E6F1FB;
+    --purple:#534AB7; --purple-light:#EEEDFE;
+    --amber:#BA7517; --amber-light:#FAEEDA;
+    --red:#A32D2D; --red-light:#FCEBEB;
+    --coral:#993C1D; --coral-light:#FAECE7;
+    --border:0.5px solid #e0e0e0; --radius:8px; --radius-lg:10px; --shadow:0 1px 3px rgba(0,0,0,.06);
+    /* Alias hacia los nombres que ya usa la lógica de Planifica, remapeados a la paleta Ratios */
+    --fondo:#f8f8f6; --tinta:#1a1a1a; --tinta-suave:#888;
+    --mar:var(--green); --mar-oscuro:var(--green-dark); --arena:#f0efec; --linea:#e0e0e0;
+    --aviso:var(--amber); --aviso-fondo:var(--amber-light);
+    --publicado:var(--green); --publicado-fondo:var(--green-light);
+    --borrador-fondo:#FFFFFF; --ausencia-fondo:#f0efec; --error:var(--red);
+    --entrada:var(--green); --entrada-f:var(--green-light); --salida:var(--red); --salida-f:var(--red-light);
+    --pausa:#888; --pausa-f:#f0efec; --correccion:var(--purple); --correccion-f:var(--purple-light);
+    --ok:var(--green); --ok-f:var(--green-light); --mas:var(--red); --menos:var(--green);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
-  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+  body{background:var(--fondo);color:var(--tinta);font-family:system-ui,-apple-system,sans-serif;font-size:13px;min-height:100vh}
+  h1,h2,h3{font-weight:600}
   label{display:block;font-weight:600;font-size:12px;margin:12px 0 5px}
-  input,select,textarea{padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
-  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
-  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
-  .btn-primario{background:var(--mar);color:#fff}
-  .btn-primario:hover{background:var(--mar-oscuro)}
+  input,select,textarea{padding:8px 11px;border:1px solid var(--linea);border-radius:var(--radius);font:inherit;background:#fff}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:7px;padding:9px 15px;font-weight:500;font-size:13px;font-family:inherit}
+  .btn-primario{background:var(--green);color:#fff}
+  .btn-primario:hover{background:var(--green-dark)}
   .btn-primario:disabled{background:var(--linea);color:var(--tinta-suave);cursor:default}
-  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
-  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+  .btn-fantasma{background:#fff;border:1px solid var(--linea);color:var(--tinta)}
+  .error-msg{color:var(--red);margin-top:12px;font-size:13px}
 
   /* ---------- Login ---------- */
   .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
-  .login-card .brand{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
-  .login-card .brand span{color:var(--mar)}
-  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  .login-card{background:#fff;border:var(--border);border-radius:var(--radius-lg);padding:36px;width:100%;max-width:380px;box-shadow:var(--shadow)}
+  .login-card .brand{font-size:19px;font-weight:600;margin-bottom:4px}
+  .login-card .brand span{color:var(--green)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px;font-size:12px}
   .login-card input{width:100%}
   .login-card .btn-primario{width:100%;margin-top:20px}
 
-  /* ---------- Cabecera y navegación ---------- */
-  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
-  header .brand{font-size:17px;font-weight:700;margin-right:4px}
-  header .brand span{color:var(--mar)}
-  .tabs{display:flex;gap:16px}
-  .tabs button{background:none;border:none;color:var(--tinta-suave);font-weight:600;font-size:13px;font-family:'Archivo';cursor:pointer;padding:0}
-  .tabs button.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
-  .spacer{flex:1}
-  /* Controles que la sección activa monta en la cabecera */
-  #barra-seccion{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  /* ---------- Layout: sidebar + columna principal (patrón Ratios) ---------- */
+  #vista-app{display:flex;align-items:flex-start;min-height:100vh}
+  .side-nav{width:210px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;background:#fdfdfc;border-right:var(--border);padding:18px 10px 18px 14px;display:flex;flex-direction:column}
+  .side-brand{padding:0 4px 14px;border-bottom:var(--border);margin-bottom:12px}
+  .side-brand .app-title{font-size:18px;font-weight:600}
+  .side-brand .app-title span{color:var(--green)}
+  .side-brand .app-sub{font-size:11px;color:var(--tinta-suave);margin-top:2px}
+  .tabs-nav{display:flex;flex-direction:column;gap:1px}
+  .tabs-nav button{padding:9px 11px;border:none;background:none;cursor:pointer;color:var(--tinta-suave);font-size:12.5px;text-align:left;width:100%;border-left:3px solid transparent;border-radius:0 6px 6px 0;font-family:inherit;font-weight:500}
+  .tabs-nav button:hover{background:rgba(29,158,117,.05)}
+  .tabs-nav button.activa{color:var(--green);border-left-color:var(--green);background:rgba(29,158,117,.09);font-weight:600}
+  .side-salir{margin-top:auto;padding-top:14px;border-top:var(--border)}
+  .side-salir button{width:100%;color:var(--tinta-suave);font-size:12px;background:none;border:none;text-align:left;cursor:pointer;padding:8px 11px;font-family:inherit}
+  .side-salir button:hover{color:var(--red)}
+
+  .main-col{flex:1;min-width:0;padding:0 20px 40px}
+  .main-inner{max-width:1280px;margin:0 auto}
+  /* Barra superior de controles de cada sección */
+  #barra-seccion{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:16px 0;border-bottom:var(--border);margin-bottom:16px;min-height:56px}
+  #barra-seccion:empty{display:none}
 
   .seccion{display:none}
   .seccion.activa{display:block}
@@ -62,7 +77,7 @@
   /* ========== PLANIFICACIÓN (cuadrante) ========== */
   .sem-nav{display:flex;align-items:center;gap:6px}
   .sem-nav button{background:#fff;border:1px solid var(--linea);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
-  .sem-nav .sem-label{font-weight:600;font-family:'Archivo';min-width:170px;text-align:center}
+  .sem-nav .sem-label{font-weight:600;min-width:170px;text-align:center}
   .chip-borradores{background:var(--aviso-fondo);color:var(--aviso);border-radius:20px;padding:5px 12px;font-weight:600;font-size:12px}
   .btn-publicar{background:var(--publicado);color:#fff}
   .btn-publicar:disabled{background:var(--linea);color:var(--tinta-suave);cursor:default}
@@ -70,9 +85,9 @@
   #plan-main select{min-width:200px}
   table.cuadrante{border-collapse:collapse;width:100%;min-width:960px;background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden}
   table.cuadrante th,table.cuadrante td{border:1px solid var(--linea);vertical-align:top}
-  table.cuadrante thead th{background:var(--arena);font-family:'Archivo';font-size:12px;font-weight:600;padding:8px;text-align:center}
+  table.cuadrante thead th{background:var(--arena);font-size:12px;font-weight:600;padding:8px;text-align:center}
   table.cuadrante thead th.hoy{background:var(--mar);color:#fff}
-  tr.fila-depto td{background:var(--arena);font-family:'Archivo';font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;padding:5px 10px;color:var(--tinta)}
+  tr.fila-depto td{background:var(--arena);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;padding:5px 10px;color:var(--tinta)}
   tr.fila-depto td span{font-weight:400;color:var(--tinta-suave);letter-spacing:0;text-transform:none}
   td.nombre{background:#fff;padding:10px;min-width:150px;position:sticky;left:0;z-index:5;border-right:2px solid var(--linea)}
   td.nombre .np{font-weight:600}
@@ -83,7 +98,7 @@
   td.celda.ausencia{background:var(--ausencia-fondo)}
   .tag-ausencia{font-size:10px;color:var(--tinta-suave);text-transform:uppercase;letter-spacing:.4px;padding:2px 4px}
   .turno{border-radius:7px;padding:5px 7px;margin-bottom:4px;font-size:12px;line-height:1.35;cursor:pointer}
-  .turno .hh{font-weight:600;font-family:'Archivo'}
+  .turno .hh{font-weight:600;}
   .turno .pu{color:var(--tinta-suave);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .turno.borrador{background:var(--borrador-fondo);border:1.5px dashed var(--mar)}
   .turno.publicado{background:var(--publicado-fondo);border:1.5px solid var(--publicado)}
@@ -114,15 +129,15 @@
   .leyenda-f{color:var(--tinta-suave);font-size:12px;margin:6px 0 14px}
   .tarjeta-f{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:14px 16px;margin-bottom:12px;max-width:860px}
   .tarjeta-f .fila-cab{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .tarjeta-f h3{font-size:15px;font-family:'Archivo'}
-  .horas-dia{font-family:'Archivo';font-weight:600;color:var(--mar)}
+  .tarjeta-f h3{font-size:15px;}
+  .horas-dia{font-weight:600;color:var(--mar)}
   .badge{font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px}
   .badge.incidencia{background:var(--aviso-fondo);color:var(--aviso)}
   .badge.encurso{background:var(--publicado-fondo);color:var(--publicado)}
   .sin-fichajes{color:var(--tinta-suave);font-size:13px;margin-top:6px}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .chip{border-radius:8px;padding:6px 10px;font-size:12.5px;border:1.5px solid transparent;cursor:pointer}
-  .chip .t{font-weight:600;font-family:'Archivo'}
+  .chip .t{font-weight:600;}
   .chip.entrada{background:var(--publicado-fondo);border-color:var(--publicado)}
   .chip.salida{background:#F9ECEA;border-color:#B03A2E}
   .chip.pausa_inicio,.chip.pausa_fin{background:#EFF1F0;border-color:#5A6B73}
@@ -138,7 +153,7 @@
   table.inf{border-collapse:collapse;width:100%;max-width:940px;background:#fff;border:1px solid var(--linea);border-radius:12px;overflow:hidden}
   table.inf th,table.inf td{border-bottom:1px solid var(--fondo);padding:10px 12px;text-align:right;font-variant-numeric:tabular-nums}
   table.inf th:first-child,table.inf td:first-child{text-align:left}
-  table.inf thead th{background:var(--arena);font-family:'Archivo';font-size:12px}
+  table.inf thead th{background:var(--arena);font-size:12px}
   table.inf td.np{font-weight:600}
   .desv-mas{color:#B03A2E;font-weight:600}.desv-menos{color:var(--publicado);font-weight:600}
   table.inf tfoot td{font-weight:700;background:var(--fondo)}
@@ -146,48 +161,48 @@
   .aviso-inc{background:var(--aviso-fondo);color:var(--aviso);border-radius:20px;font-size:11px;font-weight:600;padding:2px 8px;margin-left:6px}
 
   /* ---------- EMPLEADOS ---------- */
-  .layout-emp{display:grid;grid-template-columns:290px 1fr;gap:0;min-height:calc(100vh - 130px)}
+  .layout-emp{display:grid;grid-template-columns:290px 1fr;gap:0;min-height:calc(100vh - 100px)}
   .aside-emp{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:14px;margin-right:16px;height:fit-content}
   .buscador,.aside-emp select{width:100%;padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff;margin-bottom:6px}
   .contador-emp{font-size:11.5px;color:var(--tinta-suave);margin:0 0 6px 2px}
-  .lista-emp{overflow-y:auto;max-height:calc(100vh - 290px)}
+  .lista-emp{overflow-y:auto;max-height:calc(100vh - 260px)}
   .item-emp{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer}
   .item-emp:hover{background:var(--fondo)}
   .item-emp.activo{background:var(--mar);color:#fff}
   .item-emp.activo .sub{color:#CFE8EA}
-  .avatar{width:34px;height:34px;border-radius:50%;background:var(--arena);color:var(--tinta);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:'Archivo';font-size:13px;flex-shrink:0}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--arena);color:var(--tinta);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
   .avatar.grande{width:52px;height:52px;font-size:18px}
   .item-emp .np{font-weight:600;font-size:13.5px}
   .item-emp .sub{font-size:11.5px;color:var(--tinta-suave)}
   #emp-ficha{max-width:820px}
   .cab-ficha{display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap}
-  .cab-ficha h2{font-size:20px;font-family:'Archivo'}
+  .cab-ficha h2{font-size:20px;}
   .subcab{color:var(--tinta-suave);font-size:13px;margin-bottom:18px}
   .panel{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:18px;margin-bottom:16px}
-  .panel h3{font-size:14px;margin-bottom:10px;font-family:'Archivo'}
+  .panel h3{font-size:14px;margin-bottom:10px;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 16px}
   .fila-acciones{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
   .check{display:flex;align-items:center;gap:8px;margin-top:14px}.check input{width:auto}
   .btn-peligro{background:transparent;border:1px solid var(--error);color:var(--error)}
   .pin-caja{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .pin-valor{font-family:'Archivo';font-size:22px;font-weight:700;letter-spacing:4px;color:var(--mar)}
+  .pin-valor{font-size:22px;font-weight:700;letter-spacing:4px;color:var(--mar)}
   .nota{font-size:12px;color:var(--tinta-suave)}
   .dia-h{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--fondo);flex-wrap:wrap}
-  .dia-h .f{font-weight:600;font-family:'Archivo';font-size:13px;min-width:110px;text-transform:capitalize}
+  .dia-h .f{font-weight:600;font-size:13px;min-width:110px;text-transform:capitalize}
   .dia-h .h{color:var(--mar);font-weight:600;min-width:55px}
   .badge-inc{font-size:10.5px;font-weight:600;border-radius:12px;padding:2px 8px;background:var(--aviso-fondo);color:var(--aviso)}
 
   /* ---------- AJUSTES ---------- */
-  .layout-aj{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:calc(100vh - 130px)}
+  .layout-aj{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:calc(100vh - 100px)}
   .aside-aj{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:14px;margin-right:16px;height:fit-content}
-  .nav-sec{display:block;width:100%;text-align:left;background:none;border:none;border-radius:9px;padding:11px 12px;font-family:'Archivo';font-weight:600;font-size:13.5px;color:var(--tinta);cursor:pointer;margin-bottom:3px}
+  .nav-sec{display:block;width:100%;text-align:left;background:none;border:none;border-radius:9px;padding:11px 12px;font-weight:600;font-size:13.5px;color:var(--tinta);cursor:pointer;margin-bottom:3px}
   .nav-sec:hover{background:var(--fondo)}
   .nav-sec.activa{background:var(--mar);color:#fff}
   .nav-sec small{display:block;font-weight:400;font-size:11px;color:var(--tinta-suave);margin-top:2px}
   .nav-sec.activa small{color:#CFE8EA}
   #aj-cuerpo{max-width:860px}
-  #aj-cuerpo h2{font-size:19px;margin-bottom:3px;font-family:'Archivo'}
+  #aj-cuerpo h2{font-size:19px;margin-bottom:3px;}
   .grid-regla{display:grid;grid-template-columns:1fr 120px;gap:8px 14px;align-items:center;margin-bottom:2px}
   .grid-regla .txt{font-size:13px}.grid-regla .txt small{display:block;color:var(--tinta-suave);font-size:11.5px}
   .grid-regla input{text-align:right}
@@ -195,10 +210,10 @@
   .aviso-caja{background:var(--aviso-fondo);border:1px solid #EAD9AF;border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--aviso);margin-bottom:14px}
   table.aj{border-collapse:collapse;width:100%}
   table.aj th,table.aj td{border-bottom:1px solid var(--fondo);padding:9px 8px;text-align:left;font-size:13px}
-  table.aj thead th{font-family:'Archivo';font-size:12px;color:var(--tinta-suave)}
+  table.aj thead th{font-size:12px;color:var(--tinta-suave)}
   table.aj td.c,table.aj th.c{text-align:center}
   .chip-conv{display:inline-flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-  .chip-conv button{border:1px solid var(--linea);background:#fff;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Archivo'}
+  .chip-conv button{border:1px solid var(--linea);background:#fff;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;}
   .chip-conv button.activa{background:var(--mar);color:#fff;border-color:var(--mar)}
   .badge-def{font-size:10px;background:var(--publicado-fondo);color:var(--publicado);border-radius:10px;padding:1px 7px;margin-left:5px;font-weight:600}
   .switch{position:relative;display:inline-block;width:38px;height:22px}
@@ -210,7 +225,16 @@
   .btn-peque{padding:6px 12px;font-size:13px}
   #aj-cuerpo label{display:block;font-weight:600;font-size:12px;margin:12px 0 5px}
   #aj-cuerpo input,#aj-cuerpo select{width:100%;padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
-  @media (max-width:760px){ .layout-emp,.layout-aj{grid-template-columns:1fr} .aside-emp,.aside-aj{margin-right:0;margin-bottom:12px} .grid-2,.grid-3{grid-template-columns:1fr} }
+  @media (max-width:760px){
+    #vista-app{flex-direction:column}
+    .side-nav{position:static;width:100%;height:auto;border-right:none;border-bottom:var(--border);padding:12px 12px 0;flex-direction:column}
+    .side-brand{border-bottom:none;padding-bottom:8px;margin-bottom:8px}
+    .tabs-nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding-bottom:6px}
+    .tabs-nav button{width:auto;border-left:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap;padding:8px 12px}
+    .tabs-nav button.activa{border-left:none;border-bottom-color:var(--green);background:none}
+    .side-salir{margin-top:0;border-top:none;padding-top:0;position:absolute;top:12px;right:12px}
+    .layout-emp,.layout-aj{grid-template-columns:1fr} .aside-emp,.aside-aj{margin-right:0;margin-bottom:12px} .grid-2,.grid-3{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -231,33 +255,40 @@
 
 <!-- ===================== APP ===================== -->
 <div id="vista-app" style="display:none">
-  <header>
-    <div class="brand">Planifica <span>Bonita</span></div>
-    <nav class="tabs" id="tabs">
+  <!-- BARRA LATERAL (patrón Ratios) -->
+  <aside class="side-nav">
+    <div class="side-brand">
+      <div class="app-title">Planifica <span>Bonita</span></div>
+      <div class="app-sub">Bonita Menorca · Temporada 2026</div>
+    </div>
+    <nav class="tabs-nav" id="tabs">
       <button data-sec="planificacion" class="activa">Planificación</button>
       <button data-sec="fichajes">Fichajes</button>
       <button data-sec="informes">Informes</button>
       <button data-sec="empleados">Empleados</button>
       <button data-sec="ajustes" id="tab-ajustes" style="display:none">Ajustes</button>
     </nav>
-    <div id="barra-seccion"></div>
-    <div class="spacer"></div>
-    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
-  </header>
+    <div class="side-salir"><button id="btn-salir">Salir</button></div>
+  </aside>
 
-  <!-- ---------- Sección Planificación ---------- -->
-  <div class="seccion activa" id="sec-planificacion">
-    <main id="plan-main">
-      <div id="plan-grid"></div>
-      <div class="leyenda">
-        <span><span class="muestra" style="border:1.5px dashed var(--mar);background:#fff"></span> Borrador (solo lo ves tú)</span>
-        <span><span class="muestra" style="border:1.5px solid var(--publicado);background:var(--publicado-fondo)"></span> Publicado (visible para el empleado)</span>
-        <span><span class="muestra" style="background:var(--ausencia-fondo);border:1px solid var(--linea)"></span> Ausencia aprobada</span>
-        <span style="color:var(--aviso)">⚠ Aviso de descanso u horas — no bloquea</span>
+  <!-- COLUMNA PRINCIPAL -->
+  <div class="main-col">
+    <div class="main-inner">
+      <div id="barra-seccion"></div>
+
+      <!-- ---------- Sección Planificación ---------- -->
+      <div class="seccion activa" id="sec-planificacion">
+        <main id="plan-main">
+          <div id="plan-grid"></div>
+          <div class="leyenda">
+            <span><span class="muestra" style="border:1.5px dashed var(--green);background:#fff"></span> Borrador (solo lo ves tú)</span>
+            <span><span class="muestra" style="border:1.5px solid var(--green);background:var(--green-light)"></span> Publicado (visible para el empleado)</span>
+            <span><span class="muestra" style="background:var(--ausencia-fondo);border:1px solid var(--linea)"></span> Ausencia aprobada</span>
+            <span style="color:var(--amber)">⚠ Aviso de descanso u horas — no bloquea</span>
+          </div>
+          <div class="avisos-panel" id="plan-avisos"></div>
+        </main>
       </div>
-      <div class="avisos-panel" id="plan-avisos"></div>
-    </main>
-  </div>
 
   <!-- ---------- Otras secciones (se rellenan en fases siguientes) ---------- -->
   <div class="seccion" id="sec-fichajes">
@@ -295,26 +326,29 @@
     </div>
   </div>
 
-  <!-- Modal de corrección de fichaje (sección Fichajes) -->
-  <div class="modal-fondo" id="modal-corr">
-    <form class="modal" id="form-corr">
-      <h2 id="corr-titulo">Añadir fichaje</h2>
-      <div class="sub" id="corr-sub"></div>
-      <div class="fila-2">
-        <div><label for="c-tipo">Tipo</label>
-          <select id="c-tipo"><option value="entrada">Entrada</option><option value="salida">Salida</option>
-            <option value="pausa_inicio">Inicio de pausa</option><option value="pausa_fin">Fin de pausa</option></select></div>
-        <div><label for="c-hora">Hora</label><input type="time" id="c-hora" required></div>
-      </div>
-      <label for="c-motivo">Motivo (obligatorio, queda en el registro)</label>
-      <textarea id="c-motivo" rows="2" required placeholder="Ej.: olvidó fichar la salida al cerrar" style="width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit"></textarea>
-      <div class="aviso-modal" id="corr-error"></div>
-      <div class="modal-acciones">
-        <button type="button" class="btn btn-fantasma" id="corr-cancelar">Cancelar</button>
-        <button type="submit" class="btn btn-primario" style="width:auto;margin:0">Guardar corrección</button>
-      </div>
-    </form>
-  </div>
+    </div><!-- /main-inner -->
+  </div><!-- /main-col -->
+</div><!-- /vista-app -->
+
+<!-- Modal de corrección de fichaje (sección Fichajes) -->
+<div class="modal-fondo" id="modal-corr">
+  <form class="modal" id="form-corr">
+    <h2 id="corr-titulo">Añadir fichaje</h2>
+    <div class="sub" id="corr-sub"></div>
+    <div class="fila-2">
+      <div><label for="c-tipo">Tipo</label>
+        <select id="c-tipo"><option value="entrada">Entrada</option><option value="salida">Salida</option>
+          <option value="pausa_inicio">Inicio de pausa</option><option value="pausa_fin">Fin de pausa</option></select></div>
+      <div><label for="c-hora">Hora</label><input type="time" id="c-hora" required></div>
+    </div>
+    <label for="c-motivo">Motivo (obligatorio, queda en el registro)</label>
+    <textarea id="c-motivo" rows="2" required placeholder="Ej.: olvidó fichar la salida al cerrar" style="width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit"></textarea>
+    <div class="aviso-modal" id="corr-error"></div>
+    <div class="modal-acciones">
+      <button type="button" class="btn btn-fantasma" id="corr-cancelar">Cancelar</button>
+      <button type="submit" class="btn btn-primario" style="width:auto;margin:0">Guardar corrección</button>
+    </div>
+  </form>
 </div>
 
 <!-- Modal de turno (Planificación) -->
@@ -413,7 +447,7 @@ async function irASeccion(sec){
   if (sec==='ajustes' && APP.rol!=='admin') sec='planificacion';
   APP.seccionActual = sec;
   location.hash = sec;
-  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('activa', b.dataset.sec===sec));
+  document.querySelectorAll('.tabs-nav button').forEach(b=>b.classList.toggle('activa', b.dataset.sec===sec));
   document.querySelectorAll('.seccion').forEach(d=>d.classList.remove('activa'));
   $('sec-'+sec).classList.add('activa');
   $('barra-seccion').innerHTML=''; // cada sección repinta su barra de controles
