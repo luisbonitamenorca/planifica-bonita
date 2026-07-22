@@ -520,18 +520,24 @@ INIT.planificacion = (() => {
       S.reglas = loc?.convenios || null;
     } catch { S.reglas=null; }
     const [emps, turnos, ausencias, periodos] = await Promise.all([
-      sb.from('asignaciones').select('empleado_id, empleados!inner(id,nombre,apellidos,horas_semana,fecha_baja,departamento)')
+      sb.from('asignaciones').select('empleado_id, empleados!inner(id,nombre,apellidos,fecha_baja,departamento)')
         .eq('local_id', S.localId).or(`fecha_fin.is.null,fecha_fin.gte.${desde}`),
       sb.from('turnos').select('*').eq('local_id', S.localId).gte('fecha', desde).lte('fecha', hasta),
       sb.from('ausencias').select('*').eq('estado','aprobada').lte('fecha_inicio', hasta).gte('fecha_fin', desde),
       // Periodos que solapan con la semana: alta <= fin de semana y (baja null o baja >= inicio)
-      sb.from('periodos_contrato').select('empleado_id').lte('fecha_alta', hasta).or(`fecha_baja.is.null,fecha_baja.gte.${desde}`)
+      sb.from('periodos_contrato').select('empleado_id,fecha_alta,horas_semana').lte('fecha_alta', hasta).or(`fecha_baja.is.null,fecha_baja.gte.${desde}`)
     ]);
-    // Empleados con algún periodo activo esta semana
-    const activos = new Set((periodos.data||[]).map(p=>p.empleado_id));
+    // Horas del periodo vigente por empleado (si solapan varios, el de alta más reciente manda)
+    const horasPorEmp={};
+    for(const p of (periodos.data||[])){
+      const prev=horasPorEmp[p.empleado_id];
+      if(!prev || p.fecha_alta>prev.fecha_alta) horasPorEmp[p.empleado_id]={fecha_alta:p.fecha_alta, horas:p.horas_semana};
+    }
+    const activos = new Set(Object.keys(horasPorEmp));
     const vistos=new Set();
     S.empleados=(emps.data||[]).map(r=>r.empleados)
       .filter(e=>e && activos.has(e.id) && !vistos.has(e.id) && vistos.add(e.id))
+      .map(e=>({...e, horas_semana: horasPorEmp[e.id]?.horas ?? null}))  // horas del periodo vigente
       .sort((a,b)=>(a.departamento||'zz').localeCompare(b.departamento||'zz')||a.nombre.localeCompare(b.nombre));
     S.turnos=turnos.data||[]; S.ausencias=ausencias.data||[];
     render();
@@ -839,7 +845,7 @@ INIT.informes = (() => {
     $('inf-resultado').innerHTML='<div class="vacio">Calculando…</div>';
     const finTs=new Date(hasta+'T00:00'); finTs.setDate(finTs.getDate()+1);
     const [emps,turnos,fichs]=await Promise.all([
-      sb.from('empleados').select('id,nombre,apellidos,horas_semana'),
+      sb.from('empleados').select('id,nombre,apellidos'),
       sb.from('turnos').select('*').eq('local_id',localId).eq('estado','publicado').gte('fecha',desde).lte('fecha',hasta),
       sb.from('fichajes').select('*').eq('local_id',localId).gte('ts',new Date(desde+'T00:00').toISOString()).lt('ts',finTs.toISOString()).order('ts')
     ]);
@@ -961,10 +967,9 @@ INIT.empleados = (() => {
           <div><label>Email</label><input id="ef-email" value="${e.email||''}" ${dis}></div>
           <div><label>Teléfono</label><input id="ef-telefono" value="${e.telefono||''}" ${dis}></div>
         </div>
-        <div class="grid-3">
+        <div class="grid-2">
           <div><label>Local principal</label><select id="ef-local" ${dis}>${S.locales.map(l=>`<option value="${l.id}" ${l.id===e.local_principal_id?'selected':''}>${l.nombre}</option>`).join('')}</select></div>
           <div><label>Departamento</label><select id="ef-depto" ${dis}></select></div>
-          <div><label>Horas/semana</label><input id="ef-horas" type="number" step="0.5" min="0" value="${e.horas_semana??''}" ${dis}></div>
         </div>
         <div class="grid-2"><div><label>Tipo de contrato</label><select id="ef-contrato" ${dis}>
           <option value="">— sin asignar —</option>
@@ -1002,10 +1007,11 @@ INIT.empleados = (() => {
     const periodos=data||[]; const hoy=hoyIso();
     let html='';
     if(!periodos.length) html='<div class="nota">Sin periodos registrados.</div>';
-    else html=`<table class="aj" style="margin-bottom:${admin?'14px':'0'}"><thead><tr><th>Alta</th><th>Baja</th><th>Estado</th>${admin?'<th></th>':''}</tr></thead><tbody>
+    else html=`<table class="aj" style="margin-bottom:${admin?'14px':'0'}"><thead><tr><th>Alta</th><th>Baja</th><th>Horas/sem.</th><th>Estado</th>${admin?'<th></th>':''}</tr></thead><tbody>
       ${periodos.map(p=>{ const s=estadoPeriodo(p,hoy);
         return `<tr data-per="${p.id}"><td>${fmtDia(p.fecha_alta)}</td>
           <td>${p.fecha_baja?fmtDia(p.fecha_baja):'<span style="color:var(--tinta-suave)">abierto</span>'}</td>
+          <td>${p.horas_semana!=null?p.horas_semana+' h':'<span style="color:var(--tinta-suave)">—</span>'}</td>
           <td><span class="badge" style="background:${s.bg};color:${s.color};font-weight:600">${s.txt}</span></td>
           ${admin?`<td style="text-align:right;white-space:nowrap">
             ${!p.fecha_baja?`<button class="link-btn2" data-cerrar="${p.id}">Cerrar</button> · `:''}
@@ -1016,6 +1022,7 @@ INIT.empleados = (() => {
     if(admin) html+=`<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
       <div><label style="margin-top:0">Alta</label><input type="date" id="ef-nueva-alta" value="${hoy}"></div>
       <div><label style="margin-top:0">Baja (opcional)</label><input type="date" id="ef-nueva-baja"></div>
+      <div><label style="margin-top:0">Horas/sem.</label><input type="number" step="0.5" min="0" id="ef-nueva-horas" style="width:90px" placeholder="40"></div>
       <button class="btn btn-primario btn-peque" id="ef-add-periodo">Añadir periodo</button></div>`;
     $('ef-periodos').innerHTML=html;
     if(!admin) return;
@@ -1025,10 +1032,10 @@ INIT.empleados = (() => {
     $('ef-periodos').querySelectorAll('[data-borrar-per]').forEach(b=>b.addEventListener('click', ()=>borrarPeriodo(b.dataset.borrarPer, empId)));
   }
   async function addPeriodo(empId){
-    const alta=$('ef-nueva-alta').value, baja=$('ef-nueva-baja').value||null;
+    const alta=$('ef-nueva-alta').value, baja=$('ef-nueva-baja').value||null, horas=$('ef-nueva-horas').value;
     if(!alta){ toast('Indica la fecha de alta'); return; }
     if(baja && baja<alta){ toast('La baja no puede ser anterior al alta'); return; }
-    const { error }=await sb.from('periodos_contrato').insert({empleado_id:empId, fecha_alta:alta, fecha_baja:baja});
+    const { error }=await sb.from('periodos_contrato').insert({empleado_id:empId, fecha_alta:alta, fecha_baja:baja, horas_semana:horas===''?null:Number(horas)});
     if(error){ toast('No se pudo añadir: '+error.message); return; }
     toast('Periodo añadido'); await refrescarTrasPeriodo(empId);
   }
@@ -1045,7 +1052,8 @@ INIT.empleados = (() => {
     const alta=prompt('Fecha de alta (AAAA-MM-DD):', p.fecha_alta); if(!alta)return;
     const baja=prompt('Fecha de baja (AAAA-MM-DD, vacío = abierto):', p.fecha_baja||'');
     if(baja && baja<alta){ toast('La baja no puede ser anterior al alta'); return; }
-    const { error }=await sb.from('periodos_contrato').update({fecha_alta:alta, fecha_baja:baja||null}).eq('id',id);
+    const horas=prompt('Horas/semana (vacío = sin definir):', p.horas_semana??'');
+    const { error }=await sb.from('periodos_contrato').update({fecha_alta:alta, fecha_baja:baja||null, horas_semana:horas===''||horas==null?null:Number(horas)}).eq('id',id);
     if(error){ toast('No se pudo guardar: '+error.message); return; }
     toast('Periodo actualizado'); await refrescarTrasPeriodo(empId);
   }
@@ -1058,9 +1066,9 @@ INIT.empleados = (() => {
   // Tras cambiar periodos, refrescar el panel y sincronizar fecha_alta/fecha_baja "de conveniencia"
   // en empleados (el más reciente), para que consultas rápidas y el badge de activo sigan al día.
   async function refrescarTrasPeriodo(empId){
-    const { data }=await sb.from('periodos_contrato').select('fecha_alta,fecha_baja').eq('empleado_id',empId).order('fecha_alta',{ascending:false}).limit(1);
+    const { data }=await sb.from('periodos_contrato').select('fecha_alta,fecha_baja,horas_semana').eq('empleado_id',empId).order('fecha_alta',{ascending:false}).limit(1);
     const ult=data?.[0];
-    if(ult) await sb.from('empleados').update({fecha_alta:ult.fecha_alta, fecha_baja:ult.fecha_baja}).eq('id',empId);
+    if(ult) await sb.from('empleados').update({fecha_alta:ult.fecha_alta, fecha_baja:ult.fecha_baja, horas_semana:ult.horas_semana}).eq('id',empId);
     await pintarPeriodos(empId);
     await cargarLista();
   }
@@ -1077,7 +1085,7 @@ INIT.empleados = (() => {
       email:$('ef-email').value.trim()||null, telefono:$('ef-telefono').value.trim()||null,
       local_principal_id:$('ef-local').value, tipo_contrato:$('ef-contrato').value.trim()||null,
       departamento:($('ef-depto').value.replace(/ \(otro centro\)$/,'').trim())||null,
-      horas_semana:$('ef-horas').value===''?null:Number($('ef-horas').value), fichaje_movil:$('ef-movil').checked };
+      fichaje_movil:$('ef-movil').checked };
     const { error }=await sb.from('empleados').update(c).eq('id',e.id);
     if(error){ toast('No se pudo guardar: '+error.message); return; }
     if(c.local_principal_id!==e.local_principal_id && !(S.asigs[e.id]||[]).includes(c.local_principal_id))
@@ -1123,10 +1131,11 @@ INIT.empleados = (() => {
     const apellidos=prompt('Apellidos:')??'';
     const idx=Number(prompt(`Local principal (número):\n${S.locales.map((l,i)=>`${i+1}. ${l.nombre}`).join('\n')}`));
     const local=S.locales[idx-1]; if(!local){ toast('Local no válido'); return; }
-    const { data,error }=await sb.from('empleados').insert({nombre:nombre.trim(),apellidos:apellidos.trim(),local_principal_id:local.id,fecha_alta:hoyIso()}).select('id').single();
+    const horas=Number(prompt('Horas/semana del contrato:','40'))||null;
+    const { data,error }=await sb.from('empleados').insert({nombre:nombre.trim(),apellidos:apellidos.trim(),local_principal_id:local.id,fecha_alta:hoyIso(),horas_semana:horas}).select('id').single();
     if(error){ toast('No se pudo crear: '+error.message); return; }
     await sb.from('asignaciones').insert({empleado_id:data.id,local_id:local.id});
-    await sb.from('periodos_contrato').insert({empleado_id:data.id,fecha_alta:hoyIso()}); // primer periodo, abierto
+    await sb.from('periodos_contrato').insert({empleado_id:data.id,fecha_alta:hoyIso(),horas_semana:horas}); // primer periodo, abierto
     toast(`${nombre} añadido a ${local.nombre}`); await cargarLista(); S.sel=data.id; pintarLista(); pintarFicha();
   }
   return { init, onShow: ()=>{ if(APP.rol==='admin') pintarBarra(); } };
