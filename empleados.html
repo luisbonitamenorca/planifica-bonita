@@ -137,8 +137,7 @@ const sb = createClient(
 );
 const URL_FN = 'https://cwhmyarbjyvkfskxreeo.supabase.co/functions/v1/fichar';
 
-const S = { user:null, rol:null, empleados:[], locales:[], asigs:{}, sel:null, filtro:'', depto:'' };
-const DEPTOS = ['Sala','Cocina','Recepción','Visitas','Tienda','Bodega','Campo','Mantenimiento','Administración','Dirección'];
+const S = { user:null, rol:null, empleados:[], locales:[], deptos:[], contratos:[], asigs:{}, sel:null, filtro:'', depto:'' };
 const NOMBRE_TIPO = { entrada:'Entrada', salida:'Salida', pausa_inicio:'Pausa ▶', pausa_fin:'Pausa ■' };
 const $ = id => document.getElementById(id);
 const ini = n => n.split(/\s+/).map(p=>p[0]||'').join('').slice(0,2).toUpperCase();
@@ -162,8 +161,14 @@ async function iniciar(){
   }
   S.rol = perfil.rol;
   if (S.rol === 'admin') $('btn-alta').style.display='inline-block';
-  const { data: locs } = await sb.from('locales').select('id,nombre').eq('activo',true).order('nombre');
-  S.locales = locs||[];
+  const [locs, deptos, contratos] = await Promise.all([
+    sb.from('locales').select('id,nombre').eq('activo',true).order('nombre'),
+    sb.from('departamentos').select('nombre').eq('activo',true).order('orden'),
+    sb.from('tipos_contrato').select('nombre').eq('activo',true).order('orden')
+  ]);
+  S.locales = locs.data||[];
+  S.deptos = (deptos.data||[]).map(d=>d.nombre);
+  S.contratos = (contratos.data||[]).map(c=>c.nombre);
   $('vista-login').style.display='none'; $('vista-app').style.display='block';
   await cargarLista();
 }
@@ -234,12 +239,20 @@ async function pintarFicha(){
         <div><label>Local principal</label>
           <select id="f-local" ${dis}>${S.locales.map(l=>`<option value="${l.id}" ${l.id===e.local_principal_id?'selected':''}>${l.nombre}</option>`).join('')}</select></div>
         <div><label>Departamento</label>
-          <input id="f-depto" value="${e.departamento||''}" list="lista-deptos" placeholder="Sala, Cocina…" ${dis}>
-          <datalist id="lista-deptos">${DEPTOS.map(d=>`<option>${d}</option>`).join('')}</datalist></div>
+          <select id="f-depto" ${dis}>
+            <option value="">— sin asignar —</option>
+            ${S.deptos.map(d=>`<option ${d===e.departamento?'selected':''}>${d}</option>`).join('')}
+            ${e.departamento && !S.deptos.includes(e.departamento)?`<option selected>${e.departamento}</option>`:''}
+          </select></div>
         <div><label>Horas/semana</label><input id="f-horas" type="number" step="0.5" min="0" value="${e.horas_semana??''}" ${dis}></div>
       </div>
       <div class="grid-2">
-        <div><label>Tipo de contrato</label><input id="f-contrato" value="${e.tipo_contrato||''}" placeholder="Indefinido, fijo-discontinuo…" ${dis}></div>
+        <div><label>Tipo de contrato</label>
+          <select id="f-contrato" ${dis}>
+            <option value="">— sin asignar —</option>
+            ${S.contratos.map(c=>`<option ${c===e.tipo_contrato?'selected':''}>${c}</option>`).join('')}
+            ${e.tipo_contrato && !S.contratos.includes(e.tipo_contrato)?`<option selected>${e.tipo_contrato}</option>`:''}
+          </select></div>
         <div></div>
       </div>
       <div class="check"><input type="checkbox" id="f-movil" ${e.fichaje_movil?'checked':''} ${dis}>

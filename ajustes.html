@@ -113,6 +113,7 @@
       <button class="nav-sec activa" data-sec="convenios">Convenios y reglas<small>Descansos, jornadas, avisos</small></button>
       <button class="nav-sec" data-sec="locales">Locales y fichaje<small>Ubicación y radio</small></button>
       <button class="nav-sec" data-sec="ausencias">Tipos de ausencia<small>Catálogo y vacaciones</small></button>
+      <button class="nav-sec" data-sec="catalogos">Departamentos y contratos<small>Listas de la ficha de empleado</small></button>
     </aside>
     <section id="contenido"><div class="vacio">Cargando…</div></section>
   </div>
@@ -155,7 +156,7 @@ document.querySelectorAll('.nav-sec').forEach(b =>
 function pintar(sec){
   S.sec = sec;
   document.querySelectorAll('.nav-sec').forEach(b=>b.classList.toggle('activa', b.dataset.sec===sec));
-  ({ convenios: secConvenios, locales: secLocales, ausencias: secAusencias })[sec]();
+  ({ convenios: secConvenios, locales: secLocales, ausencias: secAusencias, catalogos: secCatalogos })[sec]();
 }
 
 // ---------- CONVENIOS Y REGLAS ----------
@@ -329,6 +330,62 @@ async function añadirTipo(){
 
 let toastTimer;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visible'),2800); }
+
+// ---------- CATÁLOGOS: DEPARTAMENTOS Y CONTRATOS ----------
+async function secCatalogos(){
+  $('contenido').innerHTML = '<div class="vacio">Cargando…</div>';
+  const [dep, con] = await Promise.all([
+    sb.from('departamentos').select('*').order('orden'),
+    sb.from('tipos_contrato').select('*').order('orden')
+  ]);
+  $('contenido').innerHTML = `
+    <h2>Departamentos y contratos</h2>
+    <div class="sub">Las listas que aparecen en la ficha de cada empleado. Desactivar un valor lo oculta de los desplegables, pero no cambia a quien ya lo tenga.</div>
+    ${bloqueCatalogo('Departamentos', 'departamentos', dep.data||[])}
+    ${bloqueCatalogo('Tipos de contrato', 'tipos_contrato', con.data||[])}`;
+  enganchaCatalogo();
+}
+function bloqueCatalogo(titulo, tabla, filas){
+  return `<div class="panel"><h3>${titulo}</h3>
+    <table><thead><tr><th>Nombre</th><th class="c">Activo</th><th class="c"></th></tr></thead><tbody>
+      ${filas.map(f=>`<tr data-tabla="${tabla}" data-id="${f.id}">
+        <td>${f.nombre}</td>
+        <td class="c"><label class="switch"><input type="checkbox" data-toggle ${f.activo?'checked':''}><span class="slider"></span></label></td>
+        <td class="c"><button class="btn btn-fantasma btn-peque" data-borrar>Quitar</button></td>
+      </tr>`).join('')}
+    </tbody></table>
+    <div style="display:flex;gap:10px;align-items:end;margin-top:12px">
+      <div style="flex:1"><label>Añadir a ${titulo.toLowerCase()}</label>
+        <input data-nuevo="${tabla}" placeholder="Nombre nuevo"></div>
+      <button class="btn btn-primario btn-peque" data-add="${tabla}">Añadir</button>
+    </div></div>`;
+}
+function enganchaCatalogo(){
+  document.querySelectorAll('[data-toggle]').forEach(chk=>
+    chk.addEventListener('change', async ()=>{
+      const tr = chk.closest('[data-tabla]');
+      const { error } = await sb.from(tr.dataset.tabla).update({ activo: chk.checked }).eq('id', tr.dataset.id);
+      toast(error?'No se pudo guardar':'Guardado'); if(error) secCatalogos();
+    }));
+  document.querySelectorAll('[data-borrar]').forEach(b=>
+    b.addEventListener('click', async ()=>{
+      const tr = b.closest('[data-tabla]');
+      if (!confirm('¿Quitar este valor de la lista? Quien ya lo tenga asignado lo conserva.')) return;
+      const { error } = await sb.from(tr.dataset.tabla).delete().eq('id', tr.dataset.id);
+      if (error){ toast('No se pudo quitar (puede estar en uso). Desactívalo en su lugar.'); return; }
+      toast('Quitado'); secCatalogos();
+    }));
+  document.querySelectorAll('[data-add]').forEach(b=>
+    b.addEventListener('click', async ()=>{
+      const tabla = b.dataset.add;
+      const inp = document.querySelector(`[data-nuevo="${tabla}"]`);
+      const nombre = inp.value.trim();
+      if (!nombre){ toast('Escribe un nombre'); return; }
+      const { error } = await sb.from(tabla).insert({ nombre, orden: 200 });
+      if (error){ toast('No se pudo añadir: '+error.message); return; }
+      toast('Añadido'); secCatalogos();
+    }));
+}
 </script>
 </body>
 </html>
