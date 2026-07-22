@@ -122,6 +122,7 @@
       <a href="fichajes.html">Fichajes</a>
       <a href="informes.html">Informes</a>
       <a href="empleados.html">Empleados</a>
+      <a href="ajustes.html">Ajustes</a>
     </nav>
     <select id="sel-local" aria-label="Local"></select>
     <div class="sem-nav">
@@ -253,6 +254,12 @@ async function cargarSemana(){
   const desde = iso(S.lunes), hasta = iso(suma(S.lunes,6));
   $('sem-label').textContent = `${fmtCorta(S.lunes)} — ${fmtCorta(suma(S.lunes,6))}`;
 
+  // Reglas del convenio de este local (para los avisos). Si algo falla, quedan valores por defecto.
+  try {
+    const { data: loc } = await sb.from('locales').select('convenio_id, convenios(*)').eq('id', S.localId).single();
+    S.reglas = loc?.convenios || null;
+  } catch { S.reglas = null; }
+
   const [emps, turnos, ausencias] = await Promise.all([
     sb.from('asignaciones')
       .select('empleado_id, empleados!inner(id,nombre,apellidos,horas_semana,fecha_baja,departamento)')
@@ -274,35 +281,35 @@ async function cargarSemana(){
 }
 
 // ---------- Avisos (no bloqueantes) ----------
-// Descanso mínimo entre jornadas: 12h (Estatuto de los Trabajadores, art. 34.3).
-// Pendiente de contrastar con el convenio de hostelería de Baleares vigente.
+// Los umbrales vienen del convenio del local (Ajustes → Convenios). Si no hay
+// convenio cargado, se usan los valores de hostelería por defecto.
 function calcularAvisos(){
-  const avisos = [];            // {texto}
+  const r = S.reglas || {};
+  const minDescanso = r.descanso_diario_h ?? 12;
+  const maxDiaria   = r.jornada_max_diaria_h ?? 9;
+  const avisos = [];
   const turnosConflicto = new Set();
   for (const e of S.empleados){
     const suyos = S.turnos.filter(t=>t.empleado_id===e.id).sort((a,b)=> a.fecha.localeCompare(b.fecha) || a.hora_inicio.localeCompare(b.hora_inicio));
-    // Horas de la semana vs contrato
     const total = suyos.reduce((s,t)=>s+horasNetas(t),0);
     e._horasSemana = total;
     if (e.horas_semana && total > Number(e.horas_semana) + 0.01)
       avisos.push(`${e.nombre}: ${total.toFixed(1)} h planificadas, contrato de ${e.horas_semana} h.`);
-    // Descanso entre turnos consecutivos y solapes el mismo día
     for (let i=1;i<suyos.length;i++){
       const a=suyos[i-1], b=suyos[i];
       const diasEntre = (new Date(b.fecha) - new Date(a.fecha)) / 86400000;
-      const finA = diasEntre*24*60*-1 + finAbsoluto(a);      // relativo al día de b
+      const finA = diasEntre*24*60*-1 + finAbsoluto(a);
       const descanso = (minutos(b.hora_inicio) - finA) / 60;
       if (a.fecha===b.fecha && minutos(b.hora_inicio) < finAbsoluto(a)){
         avisos.push(`${e.nombre}: turnos solapados el ${DIAS[(new Date(b.fecha).getDay()+6)%7].toLowerCase()}.`);
         turnosConflicto.add(a.id); turnosConflicto.add(b.id);
-      } else if (diasEntre<=1 && descanso < 12){
-        avisos.push(`${e.nombre}: solo ${descanso.toFixed(1)} h de descanso antes del turno del ${DIAS[(new Date(b.fecha).getDay()+6)%7].toLowerCase()} (mínimo 12 h).`);
+      } else if (minDescanso != null && diasEntre<=1 && descanso < minDescanso){
+        avisos.push(`${e.nombre}: solo ${descanso.toFixed(1)} h de descanso antes del turno del ${DIAS[(new Date(b.fecha).getDay()+6)%7].toLowerCase()} (mínimo ${minDescanso} h).`);
         turnosConflicto.add(b.id);
       }
     }
-    // Jornadas muy largas
-    for (const t of suyos) if (horasNetas(t) > 9)
-      avisos.push(`${e.nombre}: turno de ${horasNetas(t).toFixed(1)} h el ${DIAS[(new Date(t.fecha).getDay()+6)%7].toLowerCase()}.`);
+    if (maxDiaria != null) for (const t of suyos) if (horasNetas(t) > maxDiaria)
+      avisos.push(`${e.nombre}: turno de ${horasNetas(t).toFixed(1)} h el ${DIAS[(new Date(t.fecha).getDay()+6)%7].toLowerCase()} (máximo ${maxDiaria} h).`);
   }
   return { avisos, turnosConflicto };
 }

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajustes · Bonita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#FAFAF7; --tinta:#1C2B33; --tinta-suave:#5A6B73;
+    --mar:#0E7C86; --mar-oscuro:#0A5C64; --arena:#E9E4D8; --linea:#DDD6C7;
+    --ok:#2F855A; --ok-f:#E8F3EC; --error:#B03A2E; --aviso:#B7791F; --aviso-f:#FBF3E0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+  h1,h2,h3,button,.brand{font-family:'Archivo',sans-serif}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:36px;width:100%;max-width:380px}
+  .brand{font-size:22px;font-weight:700}.brand span{color:var(--mar)}
+  .login-card p{color:var(--tinta-suave);margin-bottom:24px}
+  label{display:block;font-weight:600;font-size:12px;margin:12px 0 5px}
+  input,select{width:100%;padding:9px 12px;border:1px solid var(--linea);border-radius:8px;font:inherit;background:#fff}
+  input:focus,select:focus,button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+  .btn{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:600;font-size:14px}
+  .btn-primario{background:var(--mar);color:#fff}.btn-primario:hover{background:var(--mar-oscuro)}
+  .btn-fantasma{background:transparent;border:1px solid var(--linea);color:var(--tinta)}
+  .btn-peque{padding:6px 12px;font-size:13px}
+  .error-msg{color:var(--error);margin-top:12px;font-size:13px}
+
+  header{background:#fff;border-bottom:1px solid var(--linea);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
+  header .brand{font-size:17px}
+  .tabs{display:flex;gap:16px}
+  .tabs a{color:var(--tinta-suave);text-decoration:none;font-weight:600;font-size:13px;font-family:'Archivo'}
+  .tabs a.activa{color:var(--mar);border-bottom:2px solid var(--mar);padding-bottom:2px}
+  .spacer{flex:1}
+
+  .layout{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:calc(100vh - 63px)}
+  aside{background:#fff;border-right:1px solid var(--linea);padding:14px}
+  .nav-sec{display:block;width:100%;text-align:left;background:none;border:none;border-radius:9px;padding:11px 12px;
+    font-family:'Archivo';font-weight:600;font-size:13.5px;color:var(--tinta);cursor:pointer;margin-bottom:3px}
+  .nav-sec:hover{background:var(--fondo)}
+  .nav-sec.activa{background:var(--mar);color:#fff}
+  .nav-sec small{display:block;font-weight:400;font-size:11px;color:var(--tinta-suave);margin-top:2px}
+  .nav-sec.activa small{color:#CFE8EA}
+
+  section{padding:22px 26px;max-width:860px}
+  section h2{font-size:19px;margin-bottom:3px}
+  .sub{color:var(--tinta-suave);font-size:13px;margin-bottom:18px}
+  .panel{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:18px;margin-bottom:16px}
+  .panel h3{font-size:14px;margin-bottom:4px}
+  .panel .ph{color:var(--tinta-suave);font-size:12.5px;margin-bottom:14px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+  .grid-regla{display:grid;grid-template-columns:1fr 120px;gap:8px 14px;align-items:center;margin-bottom:2px}
+  .grid-regla .txt{font-size:13px}
+  .grid-regla .txt small{display:block;color:var(--tinta-suave);font-size:11.5px}
+  .grid-regla input{text-align:right}
+  .fila-guardar{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+  .aviso-caja{background:var(--aviso-f);border:1px solid #EAD9AF;border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--aviso);margin-bottom:14px}
+
+  table{border-collapse:collapse;width:100%}
+  th,td{border-bottom:1px solid var(--fondo);padding:9px 8px;text-align:left;font-size:13px}
+  thead th{font-family:'Archivo';font-size:12px;color:var(--tinta-suave)}
+  td.c,th.c{text-align:center}
+  .switch{position:relative;display:inline-block;width:38px;height:22px}
+  .switch input{display:none}
+  .slider{position:absolute;inset:0;background:var(--linea);border-radius:22px;cursor:pointer;transition:.2s}
+  .slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:var(--mar)}
+  .switch input:checked + .slider:before{transform:translateX(16px)}
+  .chip-conv{display:inline-flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .chip-conv button{border:1px solid var(--linea);background:#fff;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Archivo'}
+  .chip-conv button.activa{background:var(--mar);color:#fff;border-color:var(--mar)}
+  .badge-def{font-size:10px;background:var(--ok-f);color:var(--ok);border-radius:10px;padding:1px 7px;margin-left:5px;font-weight:600}
+  .locales-conv{font-size:12px;color:var(--tinta-suave);margin-top:4px}
+  .vacio{text-align:center;padding:40px;color:var(--tinta-suave)}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none}
+  .toast.visible{opacity:1}
+  @media (max-width:760px){ .layout{grid-template-columns:1fr} aside{border-right:none;border-bottom:1px solid var(--linea)} .grid-2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div id="vista-login" class="login-wrap">
+  <form class="login-card" id="form-login">
+    <div class="brand">Ajustes <span>Bonita</span></div>
+    <p>Configuración del sistema</p>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" autocomplete="current-password" required>
+    <button class="btn btn-primario" style="width:100%;margin-top:20px" type="submit">Entrar</button>
+    <div class="error-msg" id="login-error"></div>
+  </form>
+</div>
+
+<div id="vista-app" style="display:none">
+  <header>
+    <div class="brand">Ajustes <span style="color:var(--mar)">Bonita</span></div>
+    <nav class="tabs">
+      <a href="index.html">Planificación</a>
+      <a href="fichajes.html">Fichajes</a>
+      <a href="informes.html">Informes</a>
+      <a href="empleados.html">Empleados</a>
+      <a class="activa" href="ajustes.html">Ajustes</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-fantasma" id="btn-salir">Salir</button>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <button class="nav-sec activa" data-sec="convenios">Convenios y reglas<small>Descansos, jornadas, avisos</small></button>
+      <button class="nav-sec" data-sec="locales">Locales y fichaje<small>Ubicación y radio</small></button>
+      <button class="nav-sec" data-sec="ausencias">Tipos de ausencia<small>Catálogo y vacaciones</small></button>
+    </aside>
+    <section id="contenido"><div class="vacio">Cargando…</div></section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const sb = createClient(
+  'https://cwhmyarbjyvkfskxreeo.supabase.co',
+  'sb_publishable_M-wEN03Ty8Gf1tSgni8PaA_V_F2-4vN'
+);
+const S = { user:null, sec:'convenios', convenios:[], locales:[], convSel:null };
+const $ = id => document.getElementById(id);
+
+sb.auth.onAuthStateChange(async (_e, ses) => {
+  if (ses?.user && !S.user){ S.user = ses.user; await iniciar(); }
+  if (!ses?.user){ S.user=null; $('vista-app').style.display='none'; $('vista-login').style.display='flex'; }
+});
+$('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email:$('email').value.trim(), password:$('pass').value });
+  if (error) $('login-error').textContent = 'No se pudo entrar: revisa el email y la contraseña.';
+});
+$('btn-salir').addEventListener('click', ()=>sb.auth.signOut());
+
+async function iniciar(){
+  const { data: perfil } = await sb.from('perfiles').select('rol').eq('user_id', S.user.id).single();
+  if (!perfil || perfil.rol !== 'admin'){
+    $('login-error').textContent='Los ajustes solo están disponibles para administración.';
+    await sb.auth.signOut(); return;
+  }
+  $('vista-login').style.display='none'; $('vista-app').style.display='block';
+  pintar('convenios');
+}
+
+document.querySelectorAll('.nav-sec').forEach(b =>
+  b.addEventListener('click', ()=>pintar(b.dataset.sec)));
+function pintar(sec){
+  S.sec = sec;
+  document.querySelectorAll('.nav-sec').forEach(b=>b.classList.toggle('activa', b.dataset.sec===sec));
+  ({ convenios: secConvenios, locales: secLocales, ausencias: secAusencias })[sec]();
+}
+
+// ---------- CONVENIOS Y REGLAS ----------
+const REGLAS = [
+  ['descanso_diario_h', 'Descanso diario mínimo', 'horas libres entre jornadas', 'h'],
+  ['descanso_semanal_dias', 'Descanso semanal', 'días libres consecutivos por semana', 'días'],
+  ['max_dias_consecutivos', 'Máximo días seguidos', 'días de trabajo sin descanso', 'días'],
+  ['jornada_max_diaria_h', 'Jornada máxima diaria', 'horas máximas en un día', 'h'],
+  ['jornada_min_diaria_h', 'Jornada mínima por turno', 'salvo petición del trabajador', 'h'],
+  ['jornada_max_semanal_h', 'Jornada máxima semanal', 'media semanal anual', 'h'],
+  ['pausa_tras_h', 'Pausa obligatoria tras', 'horas seguidas trabajadas', 'h'],
+  ['pausa_min_minutos', 'Duración mínima de la pausa', '', 'min'],
+];
+
+async function secConvenios(){
+  $('contenido').innerHTML = '<div class="vacio">Cargando…</div>';
+  const [{ data: convenios }, { data: locales }] = await Promise.all([
+    sb.from('convenios').select('*').order('nombre'),
+    sb.from('locales').select('id,nombre,convenio_id').eq('activo',true).order('nombre')
+  ]);
+  S.convenios = convenios||[]; S.locales = locales||[];
+  if (!S.convSel) S.convSel = (S.convenios.find(c=>c.es_por_defecto)||S.convenios[0])?.id;
+  pintarConvenio();
+}
+
+function pintarConvenio(){
+  const c = S.convenios.find(x=>x.id===S.convSel); if(!c) return;
+  const locales = S.locales.filter(l=>l.convenio_id===c.id).map(l=>l.nombre);
+  $('contenido').innerHTML = `
+    <h2>Convenios y reglas</h2>
+    <div class="sub">Las reglas alimentan los avisos del cuadrante. No bloquean: avisan al encargado.</div>
+    <div class="aviso-caja">Estas reglas siguen el convenio de hostelería de Baleares. Bodega y Campo se afinarán cuando lleguen sus textos; de momento comparten las mismas reglas.</div>
+
+    <div class="chip-conv">
+      ${S.convenios.map(x=>`<button class="${x.id===S.convSel?'activa':''}" data-conv="${x.id}">${x.nombre}${x.es_por_defecto?'<span class="badge-def">por defecto</span>':''}</button>`).join('')}
+    </div>
+
+    <div class="panel">
+      <h3>Reglas de «${c.nombre}»</h3>
+      <div class="ph">Deja un campo vacío para desactivar ese aviso.</div>
+      ${REGLAS.map(([k,t,d,u]) => `
+        <div class="grid-regla">
+          <div class="txt">${t}<small>${d}</small></div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" step="0.5" min="0" id="r-${k}" value="${c[k]??''}">
+            <span style="font-size:12px;color:var(--tinta-suave);min-width:26px">${u}</span>
+          </div>
+        </div>`).join('')}
+      <div class="fila-guardar">
+        <button class="btn btn-primario" id="btn-guardar-conv">Guardar reglas</button>
+      </div>
+      <div class="locales-conv">Se aplica a: ${locales.length?locales.join(' · '):'ningún local todavía'}</div>
+    </div>
+
+    <div class="panel">
+      <h3>Convenio por local</h3>
+      <div class="ph">Asigna a cada local el convenio que le corresponde.</div>
+      <table><thead><tr><th>Local</th><th>Convenio</th></tr></thead><tbody>
+        ${S.locales.map(l=>`<tr><td>${l.nombre}</td><td>
+          <select data-local="${l.id}" style="width:auto;min-width:180px">
+            ${S.convenios.map(x=>`<option value="${x.id}" ${x.id===l.convenio_id?'selected':''}>${x.nombre}</option>`).join('')}
+          </select></td></tr>`).join('')}
+      </tbody></table>
+    </div>`;
+
+  document.querySelectorAll('[data-conv]').forEach(b=>
+    b.addEventListener('click', ()=>{ S.convSel=b.dataset.conv; pintarConvenio(); }));
+  $('btn-guardar-conv').addEventListener('click', guardarReglas);
+  document.querySelectorAll('[data-local]').forEach(sel=>
+    sel.addEventListener('change', ()=>cambiarConvenioLocal(sel.dataset.local, sel.value)));
+}
+
+async function guardarReglas(){
+  const cambios = {};
+  for (const [k] of REGLAS){
+    const v = $('r-'+k).value;
+    cambios[k] = v==='' ? null : Number(v);
+  }
+  const { error } = await sb.from('convenios').update(cambios).eq('id', S.convSel);
+  if (error){ toast('No se pudo guardar: '+error.message); return; }
+  const i = S.convenios.findIndex(c=>c.id===S.convSel);
+  S.convenios[i] = { ...S.convenios[i], ...cambios };
+  toast('Reglas guardadas');
+}
+async function cambiarConvenioLocal(localId, convId){
+  const { error } = await sb.from('locales').update({ convenio_id: convId }).eq('id', localId);
+  if (error){ toast('No se pudo cambiar: '+error.message); return; }
+  const l = S.locales.find(x=>x.id===localId); if(l) l.convenio_id = convId;
+  toast('Convenio actualizado'); pintarConvenio();
+}
+
+// ---------- LOCALES Y FICHAJE ----------
+async function secLocales(){
+  $('contenido').innerHTML = '<div class="vacio">Cargando…</div>';
+  const { data } = await sb.from('locales').select('*').order('nombre');
+  S.locales = data||[];
+  $('contenido').innerHTML = `
+    <h2>Locales y fichaje</h2>
+    <div class="sub">Coordenadas y radio para validar el fichaje móvil. Sin coordenadas, el móvil registra la ubicación pero no puede comprobar si está dentro del local.</div>
+    <div class="aviso-caja">Para obtener lat/lng: abre Google Maps, haz clic derecho sobre el local y copia los dos números que aparecen arriba.</div>
+    ${S.locales.filter(l=>l.activo).map(l=>`
+      <div class="panel">
+        <h3>${l.nombre}</h3>
+        <div class="grid-2">
+          <div><label>Latitud</label><input id="lat-${l.id}" type="number" step="0.000001" value="${l.lat??''}" placeholder="39.8xxxxx"></div>
+          <div><label>Longitud</label><input id="lng-${l.id}" type="number" step="0.000001" value="${l.lng??''}" placeholder="4.2xxxxx"></div>
+        </div>
+        <div style="max-width:220px"><label>Radio de fichaje (metros)</label>
+          <input id="rad-${l.id}" type="number" min="20" step="10" value="${l.radio_fichaje_m??150}"></div>
+        <div class="fila-guardar"><button class="btn btn-primario btn-peque" data-guardar-local="${l.id}">Guardar</button></div>
+      </div>`).join('')}`;
+  document.querySelectorAll('[data-guardar-local]').forEach(b=>
+    b.addEventListener('click', ()=>guardarLocal(b.dataset.guardarLocal)));
+}
+async function guardarLocal(id){
+  const lat = $('lat-'+id).value, lng = $('lng-'+id).value, rad = $('rad-'+id).value;
+  const { error } = await sb.from('locales').update({
+    lat: lat===''?null:Number(lat), lng: lng===''?null:Number(lng),
+    radio_fichaje_m: rad===''?150:Number(rad)
+  }).eq('id', id);
+  if (error){ toast('No se pudo guardar: '+error.message); return; }
+  toast('Local actualizado');
+}
+
+// ---------- TIPOS DE AUSENCIA ----------
+async function secAusencias(){
+  $('contenido').innerHTML = '<div class="vacio">Cargando…</div>';
+  const { data } = await sb.from('tipos_ausencia').select('*').order('orden');
+  const tipos = data||[];
+  $('contenido').innerHTML = `
+    <h2>Tipos de ausencia</h2>
+    <div class="sub">Qué ausencias existen, cuáles restan de la bolsa de vacaciones y cuáles puede pedir el empleado desde su app.</div>
+    <div class="panel">
+      <table><thead><tr>
+        <th>Tipo</th><th class="c">Activo</th><th class="c">Resta vacaciones</th><th class="c">La pide el empleado</th>
+      </tr></thead><tbody>
+        ${tipos.map(t=>`<tr data-tipo="${t.id}">
+          <td>${t.nombre}</td>
+          <td class="c"><label class="switch"><input type="checkbox" data-campo="activo" ${t.activo?'checked':''}><span class="slider"></span></label></td>
+          <td class="c"><label class="switch"><input type="checkbox" data-campo="computa_vacaciones" ${t.computa_vacaciones?'checked':''}><span class="slider"></span></label></td>
+          <td class="c"><label class="switch"><input type="checkbox" data-campo="solicitable_empleado" ${t.solicitable_empleado?'checked':''}><span class="slider"></span></label></td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="panel">
+      <h3>Añadir tipo</h3>
+      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px"><label>Nombre</label><input id="nuevo-tipo" placeholder="Ej.: Permiso por mudanza"></div>
+        <button class="btn btn-primario btn-peque" id="btn-add-tipo">Añadir</button>
+      </div>
+    </div>`;
+  document.querySelectorAll('[data-campo]').forEach(chk=>
+    chk.addEventListener('change', ()=>{
+      const id = chk.closest('[data-tipo]').dataset.tipo;
+      actualizarTipo(id, chk.dataset.campo, chk.checked);
+    }));
+  $('btn-add-tipo').addEventListener('click', añadirTipo);
+}
+async function actualizarTipo(id, campo, valor){
+  const { error } = await sb.from('tipos_ausencia').update({ [campo]: valor }).eq('id', id);
+  if (error){ toast('No se pudo guardar: '+error.message); secAusencias(); return; }
+  toast('Guardado');
+}
+async function añadirTipo(){
+  const nombre = $('nuevo-tipo').value.trim();
+  if (!nombre){ toast('Escribe un nombre'); return; }
+  const { error } = await sb.from('tipos_ausencia').insert({ nombre, orden: 100 });
+  if (error){ toast('No se pudo añadir: '+error.message); return; }
+  toast('Tipo añadido'); secAusencias();
+}
+
+let toastTimer;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('visible'),2800); }
+</script>
+</body>
+</html>
